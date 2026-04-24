@@ -1,0 +1,4 @@
+ python -m pytest tests/ -v
+ PYTHONPATH=/home/seraph/Documents/PoliHack_CommitmentIssues_2026 python -m pytest tests/test_safe_browsing_live.py -q
+ PYTHONPATH=/home/seraph/Documents/PoliHack_CommitmentIssues_2026 python live_api_demo.py
+ PYTHONPATH=/home/seraph/Documents/PoliHack_CommitmentIssues_2026 python -m pytest tests/ -q
