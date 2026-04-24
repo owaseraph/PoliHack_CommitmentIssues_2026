@@ -7,3 +7,5 @@ lib64
 credentials.json
 pyvenv.cfg
 users.db
+__pycache__
+tokens.db
