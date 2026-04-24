@@ -4,11 +4,12 @@ from google.oauth2.credentials import Credentials
 from sqlalchemy import create_engine, Column, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import scoped_session
 
 engine = create_engine("sqlite:///tokens.db")
 Base = declarative_base()
 DBSession = sessionmaker(bind=engine)
-db_session = DBSession()
+db_session = scoped_session(DBSession)
 
 class UserToken(Base):
     __tablename__ = "user_tokens"

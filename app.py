@@ -9,6 +9,7 @@ from googleapiclient.discovery import build
 
 from mail.parser import parser_raw_email
 from detection.scanner import scan
+from database import db_session
 
 from database import save_credentials, load_credentials, delete_credentials
 
@@ -208,6 +209,10 @@ def logout():
 @app.route("/debug-session")
 def debug_session():
     return dict(session)
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db_session.remove()
 
 
 if __name__ == "__main__":

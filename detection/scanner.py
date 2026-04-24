@@ -4,6 +4,8 @@ from detection.detectors.header_detector import HeaderDetector
 from detection.detectors.link_detector import LinkDetector
 from detection.detectors.llm_detector import LLMDetector
 from config import PHISHING_SCORE_THRESHOLD
+import re
+
 
 # Registry of detectors
 DETECTORS: list[BaseDetector] = [
@@ -70,6 +72,11 @@ def _aggregate(signals: list[DetectionSignal]) -> float:
     """
     return max((s.score for s in signals), default=0.0)
 
+
 def _is_trusted_sender(email: EmailData) -> bool:
-    domain = email.from_.split("@")[-1].strip(">").lower()
+    # Extract domain from "Display Name <user@domain.com>" format
+    match = re.search(r"@([\w.-]+)>?\s*$", email.from_)
+    if not match:
+        return False
+    domain = match.group(1).lower()
     return domain in TRUSTED_DOMAINS

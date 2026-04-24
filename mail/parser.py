@@ -54,9 +54,9 @@ def _extract_parts(msg) -> tuple[str,str,list[dict]]:
         return body_text,body_html,attachments
 
 def _parse_attachment(part) -> dict:
-        payload = part.get_payload(decode=True) or "b"
+        payload = part.get_payload(decode=True) or b""
         return{
-                "filename": part.get_filename() or "uknown",
+                "filename": part.get_filename() or "unknown",
                 "content_type": part.get_content_type(),
                 "size_bytes": len(payload)
         }
