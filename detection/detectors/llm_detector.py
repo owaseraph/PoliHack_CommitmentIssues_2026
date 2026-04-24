@@ -7,8 +7,14 @@ from config import GEMINI_API_KEY
 
 SYSTEM_PROMPT = """
 You are a cybersecurity expert specializing in phishing email detection.
-Analyze the email and return ONLY a valid JSON object — no markdown, no explanation.
-Schema:
+
+Important rules:
+- Notification emails with empty bodies are NORMAL — do not flag them as suspicious
+- Emails from known platforms (GitHub, Google, Microsoft) with empty bodies are routine
+- Only flag emails with actual phishing signals: urgency, credential requests, spoofed domains, suspicious links
+- An empty email alone is NOT sufficient reason to flag as suspicious
+
+Return ONLY a valid JSON object:
 {
   "score": <float 0.0-1.0>,
   "verdict": "phishing" | "suspicious" | "safe",

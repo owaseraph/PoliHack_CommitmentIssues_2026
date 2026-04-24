@@ -5,6 +5,7 @@
 # API Keys and Credentials (CRITICAL - Never commit!)
 config.py
 credentials.json
+live_api_demo.py
 .env
 .env.local
 .env.*.local
@@ -64,6 +65,7 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+tests/
 
 # IDEs and Editors
 .vscode/
