@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}NoFishAllowed — Stop Phishing Emails{% endblock %}
+{% block content %}
+
+<!-- Hero -->
+<div style="text-align:center;padding:4rem 1rem 3rem;">
+    <h1 style="font-size:2.8rem;font-weight:800;line-height:1.2;margin-bottom:1rem;">
+        Stop phishing emails<br><span style="color:#1a56db;">before they reach you.</span>
+    </h1>
+    <p style="font-size:1.1rem;color:#6b7280;max-width:520px;margin:0 auto 2rem;">
+        NoFishAllowed scans your inbox in real time, detects phishing attempts using keyword analysis and a community-powered sender blacklist.
+    </p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        {% if user.is_authenticated %}
+        <a href="/dashboard/" class="btn btn-primary" style="font-size:1rem;padding:0.75rem 2rem;">Go to Dashboard</a>
+        {% else %}
+        <a href="/auth/register/" class="btn btn-primary" style="font-size:1rem;padding:0.75rem 2rem;">Get started free</a>
+        <a href="/auth/login/" class="btn" style="font-size:1rem;padding:0.75rem 2rem;background:#e5e7eb;color:#1a202c;">Sign in</a>
+        {% endif %}
+        <a href="/downloads/" class="btn" style="font-size:1rem;padding:0.75rem 2rem;background:#e5e7eb;color:#1a202c;">Downloads</a>
+    </div>
+</div>
+
+<!-- Features -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;margin-bottom:3rem;">
+    <div class="card" style="text-align:center;">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem;">🔍</div>
+        <h3 style="margin-bottom:0.5rem;">Keyword Detection</h3>
+        <p style="color:#6b7280;font-size:0.9rem;">Emails are scanned against 60+ phishing keywords across urgency, credential, financial and threat categories.</p>
+    </div>
+    <div class="card" style="text-align:center;">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem;">🚫</div>
+        <h3 style="margin-bottom:0.5rem;">Sender Blacklist</h3>
+        <p style="color:#6b7280;font-size:0.9rem;">Known malicious domains and disposable email services are blocked automatically, including community submissions.</p>
+    </div>
+    <div class="card" style="text-align:center;">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem;">👥</div>
+        <h3 style="margin-bottom:0.5rem;">Community Powered</h3>
+        <p style="color:#6b7280;font-size:0.9rem;">Users report phishing senders. Approved reports are added to the global blacklist — protecting everyone instantly.</p>
+    </div>
+</div>
+
+<!-- How it works -->
+<div class="card" style="margin-bottom:2rem;">
+    <h2 style="margin-bottom:1.5rem;text-align:center;">How it works</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;text-align:center;">
+        <div>
+            <div style="font-size:1.8rem;font-weight:800;color:#1a56db;">1</div>
+            <p style="font-size:0.9rem;margin-top:0.5rem;">Create a free account</p>
+        </div>
+        <div>
+            <div style="font-size:1.8rem;font-weight:800;color:#1a56db;">2</div>
+            <p style="font-size:0.9rem;margin-top:0.5rem;">Paste or connect your email</p>
+        </div>
+        <div>
+            <div style="font-size:1.8rem;font-weight:800;color:#1a56db;">3</div>
+            <p style="font-size:0.9rem;margin-top:0.5rem;">Scan detects threats instantly</p>
+        </div>
+        <div>
+            <div style="font-size:1.8rem;font-weight:800;color:#1a56db;">4</div>
+            <p style="font-size:0.9rem;margin-top:0.5rem;">Report new threats to protect the community</p>
+        </div>
+    </div>
+</div>
+
+<!-- Community CTA -->
+<div class="card" style="text-align:center;border-left:4px solid #1a56db;">
+    <h3 style="margin-bottom:0.5rem;">Help protect others</h3>
+    <p style="color:#6b7280;font-size:0.9rem;margin-bottom:1rem;">Found a phishing sender? Report it. Your submission helps protect every NoFishAllowed user.</p>
+    <a href="/scanner/community/" class="btn btn-primary">View Community Blacklist</a>
+</div>
+
+{% endblock %}

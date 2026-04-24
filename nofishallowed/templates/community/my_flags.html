@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}My Reports — NoFishAllowed{% endblock %}
+{% block content %}
+<h2 style="margin-bottom:1.5rem;">My Reports</h2>
+
+{% if not flags %}
+<div class="card">
+    <p style="color:#6b7280;">You haven't submitted any reports yet.
+    <a href="/scanner/community/flag/" style="color:#1a56db;">Report a sender</a></p>
+</div>
+{% endif %}
+
+{% for flag in flags %}
+<div class="card" style="margin-bottom:1rem;">
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <span style="font-weight:700;font-size:1rem;">{{ flag.value }}</span>
+        <span style="font-size:0.8rem;background:#e5e7eb;padding:0.15rem 0.5rem;border-radius:4px;">{{ flag.type }}</span>
+        {% if flag.status == 'approved' %}
+        <span class="badge-safe">Approved</span>
+        {% elif flag.status == 'rejected' %}
+        <span class="badge-phishing">Rejected</span>
+        {% else %}
+        <span style="background:#fef3c7;color:#92400e;padding:0.2rem 0.6rem;border-radius:999px;font-size:0.8rem;font-weight:600;">Pending</span>
+        {% endif %}
+        <span style="color:#6b7280;font-size:0.8rem;margin-left:auto;">{{ flag.submitted_at|date:"Y-m-d" }}</span>
+    </div>
+    <p style="margin-top:0.5rem;font-size:0.9rem;color:#6b7280;">{{ flag.reason }}</p>
+</div>
+{% endfor %}
+{% endblock %}

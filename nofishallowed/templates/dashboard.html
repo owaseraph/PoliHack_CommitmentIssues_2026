@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — NoFishAllowed{% endblock %}
+{% block content %}
+<h2 style="margin-bottom:1.5rem;">Welcome back, {{ user.username }} 👋</h2>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem;">
+    <div class="card" style="border-left:4px solid #1a56db;">
+        <p style="font-size:0.8rem;color:#6b7280;text-transform:uppercase;">Emails Scanned</p>
+        <p style="font-size:2rem;font-weight:700;">{{ total_scanned|default:"0" }}</p>
+    </div>
+    <div class="card" style="border-left:4px solid #e02424;">
+        <p style="font-size:0.8rem;color:#6b7280;text-transform:uppercase;">Phishing Detected</p>
+        <p style="font-size:2rem;font-weight:700;">{{ total_phishing|default:"0" }}</p>
+    </div>
+    <div class="card" style="border-left:4px solid #059669;">
+        <p style="font-size:0.8rem;color:#6b7280;text-transform:uppercase;">Total Scans</p>
+        <p style="font-size:2rem;font-weight:700;">{{ total_scans|default:"0" }}</p>
+    </div>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom:1rem;">Actions</h3>
+    <a href="/scanner/scan/" class="btn btn-primary">Scan an Email</a>
+    <a href="/scanner/history/" class="btn" style="background:#e5e7eb;color:#1a202c;margin-left:0.5rem;">View History</a>
+</div>
+{% endblock %}

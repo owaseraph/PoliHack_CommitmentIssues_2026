@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Register — NoFishAllowed{% endblock %}
+{% block content %}
+<div style="max-width:420px;margin:4rem auto;">
+    <div class="card">
+        <h1 style="font-size:1.5rem;margin-bottom:0.25rem;">Create account</h1>
+        <p style="color:#6b7280;margin-bottom:1.5rem;font-size:0.9rem;">Start protecting your inbox today.</p>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            {% if field.name != 'skip_validation' %}
+            <div class="field">
+                <label>{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<p class="help-text">{{ field.help_text }}</p>{% endif %}
+                {% if field.errors %}<p class="error-text">{{ field.errors|join:", " }}</p>{% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+            <div class="field" style="border:1px dashed #f59e0b;padding:0.75rem;border-radius:6px;background:#fffbeb;">
+                <label style="display:flex;align-items:center;gap:0.5rem;font-weight:500;color:#92400e;">
+                    {{ form.skip_validation }}
+                    ⚠ Disable password validation (dev only)
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;margin-top:1rem;">Create account</button></form>
+        <p style="margin-top:1rem;font-size:0.85rem;text-align:center;color:#6b7280;">
+            Already have an account? <a href="/auth/login/" style="color:#1a56db;">Sign in</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

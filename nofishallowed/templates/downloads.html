@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Downloads — NoFishAllowed{% endblock %}
+{% block content %}
+<h2 style="margin-bottom:0.5rem;">Downloads</h2>
+<p style="color:#6b7280;margin-bottom:2rem;">Tools to protect your inbox across every platform.</p>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;">
+    <div class="card" style="text-align:center;">
+        <div style="font-size:3rem;margin-bottom:1rem;">🌐</div>
+        <h3 style="margin-bottom:0.5rem;">Browser Extension</h3>
+        <p style="color:#6b7280;font-size:0.9rem;margin-bottom:1.25rem;">Scans webmail (Gmail, Outlook) in real time as you read. Highlights phishing emails automatically.</p>
+        <span style="display:inline-block;padding:0.4rem 1rem;background:#f3f4f6;border-radius:6px;font-size:0.8rem;color:#6b7280;">Coming soon</span>
+    </div>
+    <div class="card" style="text-align:center;">
+        <div style="font-size:3rem;margin-bottom:1rem;">🖥️</div>
+        <h3 style="margin-bottom:0.5rem;">Desktop App</h3>
+        <p style="color:#6b7280;font-size:0.9rem;margin-bottom:1.25rem;">Connects to your email client and scans incoming messages in the background. Windows &amp; macOS.</p>
+        <span style="display:inline-block;padding:0.4rem 1rem;background:#f3f4f6;border-radius:6px;font-size:0.8rem;color:#6b7280;">Coming soon</span>
+    </div>
+    <div class="card" style="text-align:center;">
+        <div style="font-size:3rem;margin-bottom:1rem;">📱</div>
+        <h3 style="margin-bottom:0.5rem;">Mobile App</h3>
+        <p style="color:#6b7280;font-size:0.9rem;margin-bottom:1.25rem;">On-device phishing scanner for iOS and Android. Check suspicious emails on the go.</p>
+        <span style="display:inline-block;padding:0.4rem 1rem;background:#f3f4f6;border-radius:6px;font-size:0.8rem;color:#6b7280;">Coming soon</span>
+    </div>
+</div>
+
+<div class="card" style="margin-top:2rem;text-align:center;">
+    <p style="color:#6b7280;font-size:0.9rem;">Want to be notified when downloads are available?</p>
+    <a href="/auth/register/" class="btn btn-primary" style="margin-top:0.75rem;">Create a free account</a>
+</div>
+{% endblock %}

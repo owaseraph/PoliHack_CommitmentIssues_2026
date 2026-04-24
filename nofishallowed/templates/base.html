@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NoFishAllowed{% endblock %}</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f9fafb;
+            color: #111827;
+            min-height: 100vh;
+        }
+
+        /* ── Nav ── */
+        nav {
+            background: #1e3a8a;
+            padding: 0 2rem;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,.25);
+        }
+        nav .brand {
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -.3px;
+        }
+        nav .nav-links { display: flex; align-items: center; gap: 0; }
+        nav .nav-links a {
+            color: #bfdbfe;
+            text-decoration: none;
+            margin-left: 1.25rem;
+            font-size: 0.875rem;
+        }
+        nav .nav-links a:hover { color: #fff; }
+        nav .nav-links .btn-signup {
+            color: #fff;
+            background: #2563eb;
+            margin-left: 0.75rem;
+            padding: 0.35rem 0.9rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        nav .nav-links .btn-signup:hover { background: #1d4ed8; }
+        nav form { display: inline; }
+        nav form button {
+            background: none;
+            border: none;
+            color: #bfdbfe;
+            cursor: pointer;
+            margin-left: 1.25rem;
+            font-size: 0.875rem;
+        }
+        nav form button:hover { color: #fff; }
+
+        /* ── Page wrapper ── */
+        .page-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 4rem;
+        }
+
+        /* ── Cards ── */
+        .card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,.06);
+        }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-block;
+            padding: 0.55rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: opacity .15s;
+        }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: #1d4ed8; color: #fff; }
+        .btn-danger  { background: #dc2626; color: #fff; }
+        .btn-ghost   { background: #e5e7eb; color: #1a202c; }
+
+        /* ── Forms ── */
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: .35rem; color: #374151; }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: .55rem .75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: #fff;
+            color: #111827;
+            transition: border-color .15s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+        }
+
+        /* ── Badges ── */
+        .badge {
+            display: inline-block;
+            padding: .2rem .6rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+        .badge-red    { background: #fee2e2; color: #b91c1c; }
+        .badge-green  { background: #d1fae5; color: #065f46; }
+        .badge-yellow { background: #fef3c7; color: #92400e; }
+        .badge-gray   { background: #f3f4f6; color: #6b7280; }
+        .badge-blue   { background: #dbeafe; color: #1e40af; }
+
+        /* ── Alert boxes ── */
+        .alert {
+            padding: .85rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .alert-danger  { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+        .alert-info    { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+
+        /* ── Utility ── */
+        h1 { font-size: 2rem; font-weight: 800; margin-bottom: .75rem; }
+        h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: .5rem; }
+        h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: .35rem; }
+        p  { line-height: 1.6; }
+        a  { color: #2563eb; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<nav>
+    <a class="brand" href="/">🐟 NoFishAllowed</a>
+    <div class="nav-links">
+        <a href="/downloads/">Downloads</a>
+        <a href="/scanner/community/">Community</a>
+        {% if user.is_authenticated %}
+        <a href="/dashboard/">Dashboard</a>
+        <a href="/scanner/scan/">Scan</a>
+        <form method="post" action="/auth/logout/">
+            {% csrf_token %}
+            <button type="submit">Logout</button>
+        </form>
+        {% else %}
+        <a href="/auth/login/">Login</a>
+        <a href="/auth/register/" class="btn-signup">Sign up</a>
+        {% endif %}
+    </div>
+</nav>
+
+<div class="page-wrapper">
+    {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Scan History — NoFishAllowed{% endblock %}
+{% block content %}
+<h2 style="margin-bottom:1.5rem;">Scan History</h2>
+
+{% if not scans %}
+<div class="card"><p style="color:#6b7280;">No scans yet. <a href="/scanner/scan/" style="color:#1a56db;">Run your first scan.</a></p></div>
+{% endif %}
+
+{% for scan in scans %}
+<div class="card">
+    <p style="font-size:0.85rem;color:#6b7280;margin-bottom:0.75rem;">
+        Scan #{{ scan.pk }} — {{ scan.initiated_at|date:"Y-m-d H:i" }} —
+        <strong>{{ scan.emails_scanned }}</strong> scanned,
+        <strong style="color:#e02424;">{{ scan.phishing_detected }}</strong> phishing
+    </p>
+    {% for email in scan.emails.all %}
+    <div style="display:flex;align-items:center;gap:1rem;padding:0.5rem 0;border-top:1px solid #f3f4f6;">
+        {% if email.risk == 'phishing' %}
+            <span class="badge-phishing">PHISHING</span>
+        {% else %}
+            <span class="badge-safe">SAFE</span>
+        {% endif %}
+        <span style="font-size:0.9rem;flex:1;">{{ email.subject|default:"(no subject)" }}</span>
+        <span style="font-size:0.8rem;color:#6b7280;">{{ email.sender }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+{% endblock %}

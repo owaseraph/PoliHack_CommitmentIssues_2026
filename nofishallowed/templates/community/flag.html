@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Report a Sender — NoFishAllowed{% endblock %}
+{% block content %}
+
+<div style="max-width:600px;margin:0 auto;">
+    <div style="margin-bottom:1.5rem;">
+        <a href="/scanner/community/" style="font-size:0.85rem;color:#6b7280;text-decoration:none;">← Back to blacklist</a>
+        <h2 style="margin-top:0.5rem;">Report a suspicious sender</h2>
+        <p style="color:#6b7280;font-size:0.9rem;margin-top:0.25rem;">
+            Your report will be reviewed by an admin. Once approved, the sender is added to the community blacklist and starts protecting everyone.
+        </p>
+    </div>
+
+    {% if submitted %}
+    <div class="alert alert-success">
+        <strong>Thanks for your report!</strong> It's been submitted for admin review. You can track its status in
+        <a href="/scanner/community/my-flags/">My submissions</a>.
+    </div>
+    <a href="/scanner/community/flag/" class="btn btn-primary" style="margin-top:0.5rem;">Submit another</a>
+
+    {% else %}
+
+    <div class="card">
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="{{ form.type.id_for_label }}">{{ form.type.label }}</label>
+                {{ form.type }}
+                {% if form.type.errors %}<p style="color:#dc2626;font-size:0.8rem;margin-top:.25rem;">{{ form.type.errors.0 }}</p>{% endif %}
+                <p style="color:#9ca3af;font-size:0.78rem;margin-top:.3rem;">Choose <em>Domain</em> to block all email from that domain, or <em>Exact Email</em> for a single address.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.value.id_for_label }}">{{ form.value.label }}</label>
+                {{ form.value }}
+                {% if form.value.errors %}<p style="color:#dc2626;font-size:0.8rem;margin-top:.25rem;">{{ form.value.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.reason.id_for_label }}">{{ form.reason.label }}</label>
+                {{ form.reason }}
+                {% if form.reason.errors %}<p style="color:#dc2626;font-size:0.8rem;margin-top:.25rem;">{{ form.reason.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.evidence_url.id_for_label }}">{{ form.evidence_url.label }}</label>
+                {{ form.evidence_url }}
+                {% if form.evidence_url.errors %}<p style="color:#dc2626;font-size:0.8rem;margin-top:.25rem;">{{ form.evidence_url.errors.0 }}</p>{% endif %}
+                <p style="color:#9ca3af;font-size:0.78rem;margin-top:.3rem;">Link to a screenshot, paste, or any public evidence (optional but helpful).</p>
+            </div>
+
+            <div style="display:flex;gap:0.75rem;align-items:center;margin-top:1.25rem;">
+                <button type="submit" class="btn btn-primary">Submit report</button>
+                <a href="/scanner/community/" class="btn btn-ghost">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card" style="margin-top:1rem;background:#fffbeb;border-color:#fcd34d;">
+        <p style="font-size:0.85rem;color:#92400e;">
+            <strong>Note:</strong> Reports are manually reviewed before being added to the blacklist. False or spam reports may result in your account being restricted.
+        </p>
+    </div>
+
+    {% endif %}
+</div>
+
+{% endblock %}

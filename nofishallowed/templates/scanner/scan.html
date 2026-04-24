@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Scan Email — NoFishAllowed{% endblock %}
+{% block content %}
+<h2 style="margin-bottom:1.5rem;">Scan an Email</h2>
+
+{% if result %}
+<div class="card" style="border-left:4px solid {% if result.risk == 'phishing' %}#e02424{% else %}#059669{% endif %}; margin-bottom:1.5rem;">
+    <p style="font-size:1.1rem;font-weight:700;margin-bottom:0.5rem;">
+        Result:
+        {% if result.risk == 'phishing' %}
+            <span class="badge-phishing">⚠ PHISHING DETECTED</span>
+        {% else %}
+            <span class="badge-safe">✔ SAFE</span>
+        {% endif %}
+    </p>
+    {% if result.subject %}<p style="font-size:0.9rem;color:#6b7280;">Subject: {{ result.subject }}</p>{% endif %}
+    {% if result.sender %}<p style="font-size:0.9rem;color:#6b7280;">From: {{ result.sender }}</p>{% endif %}
+    {% if result.flagged_sender %}
+    <p style="margin-top:0.75rem;font-size:0.85rem;font-weight:600;color:#b91c1c;">⚠ Sender domain is blacklisted.</p>
+    {% endif %}
+    {% if result.matched_keywords %}
+    <p style="margin-top:0.75rem;font-size:0.85rem;font-weight:600;">Matched keywords:</p>
+    <ul style="margin-top:0.25rem;padding-left:1.25rem;font-size:0.85rem;">
+        {% for kw in result.matched_keywords %}<li>{{ kw }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="field">
+            <label>{{ field.label }}</label>
+            {{ field }}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Scan</button>
+    </form>
+</div>
+{% endblock %}
