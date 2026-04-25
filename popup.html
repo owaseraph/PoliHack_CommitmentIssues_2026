@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 220px;
+      padding: 16px;
+      margin: 0;
+      background: #f7f9fc;
+    }
+
+    h3 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      color: #111;
+      text-align: center;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .free {
+      background: #ecf0f1;
+      color: #2c3e50;
+    }
+
+    .free:hover {
+      background: #dfe6e9;
+    }
+
+    .premium {
+      background: #3498db;
+      color: white;
+    }
+
+    .premium:hover {
+      background: #2980b9;
+    }
+
+    .selected {
+      outline: 2px solid #2ecc71;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 11px;
+      text-align: center;
+      color: #666;
+    }
+  </style>
+</head>
+
+<body>
+  <h3>Select Plan</h3>
+
+  <button id="free" class="btn free">Free Plan</button>
+  <button id="premium" class="btn premium">Premium Plan</button>
+
+  <div id="status" class="status">No plan selected</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
