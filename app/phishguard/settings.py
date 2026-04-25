@@ -5,16 +5,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-insecure-key-change-in-production")
 
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+# ✅ Safe default: False. Explicitly set DEBUG=True in local .env only.
+# If this were True by default and you forgot to set it on Railway,
+# Django would serve full tracebacks to anyone on the internet.
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = ["*"]
 
-# Trust ngrok/proxy forwarded headers so build_absolute_uri() returns the public URL
-USE_X_FORWARDED_HOST = True
+# Trust Railway/ngrok proxy headers so build_absolute_uri() returns the public URL
+USE_X_FORWARDED_HOST    = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# Set this to your ngrok URL when using ngrok (no trailing slash)
-# e.g. SITE_URL = "https://abc123.ngrok-free.app"
+# Set this to your public URL in Railway env vars (no trailing slash)
+# e.g. SITE_URL=https://phishguard.up.railway.app
 SITE_URL = os.environ.get("SITE_URL", "")
 
 INSTALLED_APPS = [
@@ -65,22 +68,26 @@ DATABASES = {
     }
 }
 
-SESSION_ENGINE = "django.contrib.sessions.backends.db"
+# DB-backed sessions survive across multiple gunicorn workers.
+# This is critical — an in-memory or cookie session would cause
+# random OAuth login failures when gunicorn routes requests to
+# different workers mid-flow.
+SESSION_ENGINE      = "django.contrib.sessions.backends.db"
 SESSION_COOKIE_SAMESITE = "Lax"
-SESSION_COOKIE_SECURE = not DEBUG  # True in production (HTTPS)
+SESSION_COOKIE_SECURE   = not DEBUG  # HTTPS-only cookies in production
 
 # CSRF trusted origins — required for Railway/ngrok (non-localhost) deployments
 _SITE_URL = SITE_URL.rstrip("/")
 CSRF_TRUSTED_ORIGINS = [_SITE_URL] if _SITE_URL else []
 
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
-USE_I18N = True
-USE_TZ = True
+TIME_ZONE     = "UTC"
+USE_I18N      = True
+USE_TZ        = True
 
-STATIC_URL = "/static/"
+STATIC_URL      = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT     = BASE_DIR / "staticfiles"
 STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
