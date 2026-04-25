@@ -338,11 +338,13 @@ def dashboard(request):
         1 for e in emails_data
         if e.get("phishing_score", 0) > 0.5 and not e.get("is_phishing")
     )
+    safe_count = len(emails_data) - phishing_count - suspicious_count
 
     return render(request, "dashboard.html", {
         "emails":           emails_data,
         "phishing_count":   phishing_count,
         "suspicious_count": suspicious_count,
+        "safe_count":       safe_count,
         "user_name":        request.session.get("user_name", ""),
         "user_email":       request.session.get("user_email", ""),
         "user_picture":     request.session.get("user_picture", ""),
@@ -641,8 +643,8 @@ def my_plugins(request):
     )
 
     return render(request, "my_plugins.html", {
-        "installs":  installs,
-        "authored":  authored,
-        "user_name": request.session.get("user_name", ""),
+        "installs":   installs,
+        "authored":   authored,
+        "user_name":  request.session.get("user_name", ""),
         "user_email": request.session.get("user_email", ""),
     })
