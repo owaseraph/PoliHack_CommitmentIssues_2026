@@ -389,9 +389,19 @@ def community(request):
 
         return redirect(reverse("community"))
 
+    # Get upvoted report IDs from session
+    upvoted_ids = set(request.session.get("upvoted_reports", []))
+
     reports = CommunityReport.objects.all()[:50]
+    
+    # Annotate each report with upvoted status
+    reports_with_status = []
+    for report in reports:
+        report.upvoted = report.id in upvoted_ids
+        reports_with_status.append(report)
+
     return render(request, "community.html", {
-        "reports":      reports,
+        "reports":      reports_with_status,
         "is_logged_in": bool(request.session.get("user_id")),
         "user_name":    request.session.get("user_name", ""),
     })
@@ -405,18 +415,22 @@ def upvote_report(request, report_id):
     """
     upvoted = set(request.session.get("upvoted_reports", []))
 
+    report = get_object_or_404(CommunityReport, id=report_id)
+
     if report_id in upvoted:
-        report = get_object_or_404(CommunityReport, id=report_id)
-        return JsonResponse({"upvotes": report.upvotes, "already_voted": True})
-
-    report          = get_object_or_404(CommunityReport, id=report_id)
-    report.upvotes += 1
-    report.save()
-
-    upvoted.add(report_id)
-    request.session["upvoted_reports"] = list(upvoted)
-
-    return JsonResponse({"upvotes": report.upvotes, "already_voted": False})
+        # Remove upvote
+        upvoted.remove(report_id)
+        report.upvotes = max(0, report.upvotes - 1)
+        report.save()
+        request.session["upvoted_reports"] = list(upvoted)
+        return JsonResponse({"upvotes": report.upvotes, "upvoted": False})
+    else:
+        # Add upvote
+        upvoted.add(report_id)
+        report.upvotes += 1
+        report.save()
+        request.session["upvoted_reports"] = list(upvoted)
+        return JsonResponse({"upvotes": report.upvotes, "upvoted": True})
 
 
 def download(request):
