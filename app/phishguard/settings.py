@@ -13,6 +13,10 @@ ALLOWED_HOSTS = ["*"]
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# Set this to your ngrok URL when using ngrok (no trailing slash)
+# e.g. SITE_URL = "https://abc123.ngrok-free.app"
+SITE_URL = os.environ.get("SITE_URL", "")
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",

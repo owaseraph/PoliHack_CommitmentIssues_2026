@@ -20,6 +20,8 @@ from .models import UserToken, CommunityReport
 
 # Allow HTTP for local development only
 os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
+# Don't raise an exception if Google returns a subset of requested scopes
+os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
 
 # Fallback store in case the session is lost between login and callback
 _code_verifiers: dict[str, str] = {}
@@ -35,7 +37,11 @@ SCOPES = [
 ]
 
 def _get_redirect_uri(request):
-    """Build the OAuth redirect URI from the current request host."""
+    """Build the OAuth redirect URI, using SITE_URL override if configured."""
+    from django.conf import settings
+    site_url = getattr(settings, "SITE_URL", "").rstrip("/")
+    if site_url:
+        return site_url + "/oauth2callback"
     return request.build_absolute_uri("/oauth2callback")
 
 
