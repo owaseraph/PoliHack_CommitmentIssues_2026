@@ -91,6 +91,7 @@ class LLMDetector(BaseDetector):
                 system_instruction=SYSTEM_PROMPT,
                 response_mime_type="application/json",
                 temperature=0.1,
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
             )
         )
 
