@@ -1,6 +1,6 @@
 [deploy]
-startCommand = "gunicorn phishguard.wsgi --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+startCommand = "python manage.py migrate --noinput && python manage.py ensure_superuser && python manage.py seed_marketplace && gunicorn phishguard.wsgi --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+releaseCommand = "python manage.py collectstatic --noinput"
 healthcheckPath = "/"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
-releaseCommand = "python manage.py collectstatic --noinput && python manage.py migrate --noinput && python manage.py ensure_superuser && python manage.py seed_marketplace"
