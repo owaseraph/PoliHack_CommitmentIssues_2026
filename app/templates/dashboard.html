@@ -41,24 +41,51 @@
       var(--bg);
   }
 
-  .shell { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
-
-  /* ── Header ── */
-  .topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 2.5rem;
+  /* ── Nav ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(12,14,15,0.85); backdrop-filter: blur(12px);
+    border-bottom: 0.5px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between; height: 56px;
   }
-  .logo { display: flex; align-items: center; gap: 10px; }
-  .logo-icon {
-    width: 32px; height: 32px; border-radius: 8px;
+  .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+  .nav-logo-icon {
+    width: 28px; height: 28px; border-radius: 7px;
     background: linear-gradient(135deg, #ff4d4d 0%, #7a1f1f 100%);
-    display: flex; align-items: center; justify-content: center; font-size: 16px;
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
   }
-  .logo-name { font-family: var(--mono); font-size: 15px; font-weight: 500; letter-spacing: 0.05em; color: var(--text); }
-  .logo-name span { color: var(--red); }
+  .nav-logo-name {
+    font-family: var(--mono); font-size: 14px; font-weight: 500;
+    letter-spacing: 0.05em; color: var(--text);
+  }
+  .nav-logo-name span { color: var(--red); }
+  .nav-right { display: flex; align-items: center; gap: 8px; }
+  .nav-link {
+    font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.06em;
+    color: var(--muted); text-decoration: none; padding: 6px 12px; border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .nav-link:hover { color: var(--text); background: var(--surface); }
+  .nav-link.active { color: var(--text); }
 
-  .topbar-right { display: flex; align-items: center; gap: 10px; }
-  .user-info { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  /* ── User avatar pill ── */
+  .user-pill {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 0.5px solid var(--border2);
+    border-radius: 99px; padding: 4px 12px 4px 4px;
+  }
+  .user-avatar {
+    width: 26px; height: 26px; border-radius: 50%; object-fit: cover;
+    border: 0.5px solid var(--border2);
+  }
+  .user-avatar-fallback {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--red-dim); border: 0.5px solid var(--red-mid);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 11px; color: var(--red);
+  }
+  .user-email { font-family: var(--mono); font-size: 10px; color: var(--muted); }
 
   .logout-btn {
     font-family: var(--mono); font-size: 11px; font-weight: 500;
@@ -67,11 +94,43 @@
     text-decoration: none; letter-spacing: 0.05em;
     transition: color 0.15s, border-color 0.15s;
   }
-  .logout-btn:hover { color: var(--text); border-color: var(--muted2); }
+  .logout-btn:hover { color: var(--red); border-color: var(--red-mid); }
+
+  .shell { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+  /* ── Welcome bar ── */
+  .welcome-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.75rem; animation: fadeUp 0.3s ease both;
+  }
+  .welcome-text h1 {
+    font-family: var(--mono); font-size: 1.1rem; font-weight: 500; margin-bottom: 3px;
+  }
+  .welcome-text h1 span { color: var(--red); }
+  .welcome-text p { font-size: 12px; color: var(--muted); }
+  .scan-badge {
+    font-family: var(--mono); font-size: 10px; color: var(--green);
+    background: var(--green-dim); border: 0.5px solid var(--green-mid);
+    padding: 5px 12px; border-radius: 99px; display: flex; align-items: center; gap: 6px;
+  }
+  .scan-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(0.8); }
+  }
 
   /* ── Stats ── */
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.75rem; }
-  .stat { background: var(--surface); border: 0.5px solid var(--border); border-radius: 10px; padding: 14px 18px; }
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    margin-bottom: 2rem; animation: fadeUp 0.3s 0.05s ease both;
+  }
+  .stat {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: 10px; padding: 14px 18px;
+  }
   .stat-label {
     font-family: var(--mono); font-size: 10px; font-weight: 500;
     letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
@@ -80,12 +139,29 @@
   .stat-value.v-danger { color: var(--red); }
   .stat-value.v-warn   { color: var(--amber); }
   .stat-value.v-safe   { color: var(--green); }
+  .stat-value.v-blue   { color: var(--blue); }
 
-  /* ── Section title ── */
+  /* ── Filter bar ── */
+  .filter-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; animation: fadeUp 0.3s 0.1s ease both;
+  }
   .section-title {
     font-family: var(--mono); font-size: 10px; font-weight: 500;
-    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
   }
+  .filter-pills { display: flex; gap: 5px; }
+  .filter-pill {
+    font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.05em;
+    padding: 4px 10px; border-radius: 5px; cursor: pointer;
+    border: 0.5px solid var(--border2); background: var(--surface2); color: var(--muted);
+    transition: all 0.15s;
+  }
+  .filter-pill:hover           { color: var(--text); border-color: var(--muted2); }
+  .filter-pill.active          { color: var(--text); border-color: var(--muted2); background: var(--surface); }
+  .filter-pill.fp-danger.active { color: var(--red);   border-color: var(--red-mid);   background: var(--red-dim); }
+  .filter-pill.fp-warn.active   { color: var(--amber); border-color: var(--amber-mid); background: var(--amber-dim); }
+  .filter-pill.fp-safe.active   { color: var(--green); border-color: var(--green-mid); background: var(--green-dim); }
 
   /* ── Email card ── */
   .card {
@@ -125,7 +201,9 @@
     justify-content: space-between; gap: 12px; margin-bottom: 10px;
   }
   .card-subject { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.45; margin-bottom: 3px; }
+  .card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .card-from { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .card-date { font-family: var(--mono); font-size: 10px; color: var(--muted2); }
 
   /* ── Badge ── */
   .badge {
@@ -143,7 +221,7 @@
   .score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
   .score-lbl { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; white-space: nowrap; }
   .bar-track { flex: 1; height: 4px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
-  .bar-fill  { height: 100%; border-radius: 99px; }
+  .bar-fill  { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
   .score-num { font-family: var(--mono); font-size: 11px; color: var(--text); min-width: 36px; text-align: right; }
 
   /* ── Chips ── */
@@ -181,27 +259,73 @@
   .divider { border: none; border-top: 0.5px solid var(--border); margin: 8px 0; }
 
   /* ── Empty state ── */
-  .empty { text-align: center; padding: 4rem 2rem; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  .empty {
+    text-align: center; padding: 4rem 2rem;
+    font-family: var(--mono); font-size: 13px; color: var(--muted);
+  }
+  .empty-icon { font-size: 2rem; margin-bottom: 1rem; opacity: 0.4; }
+
+  /* ── Hidden cards (filter) ── */
+  .card.hidden { display: none; }
+
+  /* ── No results message ── */
+  #no-results {
+    display: none; text-align: center; padding: 2rem;
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 640px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .filter-pills { display: none; }
+    .user-email { display: none; }
+    nav { padding: 0 1rem; }
+  }
 </style>
 </head>
 <body>
+
+<nav>
+  <a href="{% url 'home' %}" class="nav-logo">
+    <div class="nav-logo-icon">🛡</div>
+    <div class="nav-logo-name">Phish<span>Guard</span></div>
+  </a>
+  <div class="nav-right">
+    <a class="nav-link" href="{% url 'community' %}">COMMUNITY</a>
+    <a class="nav-link" href="{% url 'marketplace' %}">MARKETPLACE</a>
+
+    <div class="user-pill">
+      {% if user_picture %}
+        <img class="user-avatar" src="{{ user_picture }}" alt="{{ user_name }}"/>
+      {% else %}
+        <div class="user-avatar-fallback">{{ user_name|first|upper }}</div>
+      {% endif %}
+      <span class="user-email">{{ user_email }}</span>
+    </div>
+
+    <a href="{% url 'logout' %}" class="logout-btn">LOGOUT</a>
+  </div>
+</nav>
+
 <div class="shell">
 
-  <div class="topbar">
-    <a href="{% url 'home' %}" class="logo" style="text-decoration:none;">
-      <div class="logo-icon">🛡</div>
-      <div class="logo-name">Phish<span>Guard</span></div>
-    </a>
-    <div class="topbar-right">
-      {% if user_email %}<span class="user-info">{{ user_email }}</span>{% endif %}
-      <a href="{% url 'logout' %}" class="logout-btn">LOGOUT</a>
+  <!-- Welcome bar -->
+  <div class="welcome-bar">
+    <div class="welcome-text">
+      <h1>Welcome back, <span>{{ user_name|default:"user" }}</span></h1>
+      <p>Here are your latest {{ emails|length }} emails — scanned across 4 detection layers.</p>
+    </div>
+    <div class="scan-badge">
+      <div class="scan-dot"></div>
+      LIVE SCAN
     </div>
   </div>
 
+  <!-- Stats -->
   <div class="stats">
     <div class="stat">
       <div class="stat-label">Scanned</div>
-      <div class="stat-value">{{ emails|length }}</div>
+      <div class="stat-value v-blue">{{ emails|length }}</div>
     </div>
     <div class="stat">
       <div class="stat-label">Phishing</div>
@@ -213,72 +337,109 @@
     </div>
     <div class="stat">
       <div class="stat-label">Safe</div>
-      <div class="stat-value v-safe">{{ safe_count }}</div>
+      <div class="stat-value v-safe">{{ emails|length|add:"-"|add:phishing_count }}</div>
     </div>
   </div>
 
-  <div class="section-title">Recent emails</div>
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <div class="section-title">Recent emails</div>
+    <div class="filter-pills">
+      <button class="filter-pill active" onclick="filterCards('all', this)">ALL</button>
+      <button class="filter-pill fp-danger" onclick="filterCards('phishing', this)">PHISHING</button>
+      <button class="filter-pill fp-warn"   onclick="filterCards('suspicious', this)">SUSPICIOUS</button>
+      <button class="filter-pill fp-safe"   onclick="filterCards('safe', this)">SAFE</button>
+    </div>
+  </div>
 
-  {% if not emails %}
-    <div class="empty">No emails found in your inbox.</div>
-  {% endif %}
-
-  {% for email in emails %}
-    <div class="card is-{{ email.verdict }}">
-      <div class="card-head">
-        <div>
-          <div class="card-subject">{{ email.subject|default:"(no subject)" }}</div>
-          <div class="card-from">{{ email.sender|default:"unknown sender" }}</div>
-        </div>
-        <span class="badge b-{{ email.verdict }}">{{ email.label }}</span>
+  <div id="email-list">
+    {% if not emails %}
+      <div class="empty">
+        <div class="empty-icon">📭</div>
+        No emails found in your inbox.
       </div>
+    {% endif %}
 
-      <div class="score-row">
-        <span class="score-lbl">RISK</span>
-        <div class="bar-track">
-          <div class="bar-fill" style="width: {{ email.pct }}%; background: {{ email.bar_color }};"></div>
-        </div>
-        <span class="score-num">{{ email.pct }}/100</span>
-      </div>
-
-      <div class="chips">
-        {% for sig in email.detection_signals %}
-          <span class="chip">{{ sig.name }}&nbsp;{{ sig.score_fmt }}</span>
-        {% endfor %}
-        {% for flag in email.all_flags %}
-          <span class="chip {% if flag.danger %}c-danger{% endif %}">{{ flag.text }}</span>
-        {% endfor %}
-      </div>
-
-      {% if email.has_analysis %}
-        <button class="toggle-btn" onclick="toggleReasons(this)">
-          <span>▸</span> AI ANALYSIS
-        </button>
-        <div class="reasons-box">
-          {% if email.bad_links %}
-            {% for link in email.bad_links %}
-              <div class="bad-url">⚠ {{ link }}</div>
-            {% endfor %}
-            <div class="divider"></div>
-          {% endif %}
-          {% for reason in email.llm_reasons %}
-            <div class="reason-line">
-              <span class="reason-dash">—</span>
-              <span>{{ reason }}</span>
+    {% for email in emails %}
+      <div class="card is-{{ email.verdict }}" data-verdict="{{ email.verdict }}">
+        <div class="card-head">
+          <div>
+            <div class="card-subject">{{ email.subject|default:"(no subject)" }}</div>
+            <div class="card-meta">
+              <span class="card-from">{{ email.sender|default:"unknown sender" }}</span>
+              {% if email.date %}<span class="card-date">{{ email.date }}</span>{% endif %}
             </div>
+          </div>
+          <span class="badge b-{{ email.verdict }}">{{ email.label }}</span>
+        </div>
+
+        <div class="score-row">
+          <span class="score-lbl">RISK</span>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: {{ email.pct }}%; background: {{ email.bar_color }};"></div>
+          </div>
+          <span class="score-num">{{ email.pct }}/100</span>
+        </div>
+
+        <div class="chips">
+          {% for sig in email.detection_signals %}
+            <span class="chip">{{ sig.name }}&nbsp;{{ sig.score_fmt }}</span>
+          {% endfor %}
+          {% for flag in email.all_flags %}
+            <span class="chip {% if flag.danger %}c-danger{% endif %}">{{ flag.text }}</span>
           {% endfor %}
         </div>
-      {% endif %}
-    </div>
-  {% endfor %}
+
+        {% if email.has_analysis %}
+          <button class="toggle-btn" onclick="toggleReasons(this)">
+            <span>▸</span> AI ANALYSIS
+          </button>
+          <div class="reasons-box">
+            {% if email.bad_links %}
+              {% for link in email.bad_links %}
+                <div class="bad-url">⚠ {{ link }}</div>
+              {% endfor %}
+              <div class="divider"></div>
+            {% endif %}
+            {% for reason in email.llm_reasons %}
+              <div class="reason-line">
+                <span class="reason-dash">—</span>
+                <span>{{ reason }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+    <div id="no-results">No emails match this filter.</div>
+  </div>
 
 </div>
+
 <script>
   function toggleReasons(btn) {
     const box  = btn.nextElementSibling;
     const icon = btn.querySelector('span');
     const open = box.classList.toggle('open');
     icon.textContent = open ? '▾' : '▸';
+  }
+
+  function filterCards(verdict, pill) {
+    document.querySelectorAll('.filter-pill').forEach(p => {
+      p.classList.remove('active');
+    });
+    pill.classList.add('active');
+
+    const cards = document.querySelectorAll('#email-list .card');
+    let visible = 0;
+    cards.forEach(card => {
+      const match = verdict === 'all' || card.dataset.verdict === verdict;
+      card.classList.toggle('hidden', !match);
+      if (match) visible++;
+    });
+
+    document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
   }
 </script>
 </body>
