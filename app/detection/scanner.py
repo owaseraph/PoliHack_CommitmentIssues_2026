@@ -59,14 +59,14 @@ def _run_detectors(email: EmailData) -> list[DetectionSignal]:
     signals = []
     for detector in DETECTORS:
         try:
-            signals.append(detector.analyze(email))
-        
+            if detector.name == "llm_analysis":
+                signals.append(detector.analyze(email, pre_signals=signals))
+            else:
+                signals.append(detector.analyze(email))
         except Exception as e:
             print(f"[Scanner] Detector '{detector.name}' failed: {e}")
-    
     return signals
 
-# app/detection/scanner.py
 
 def _aggregate(signals: list[DetectionSignal]) -> float:
     """
