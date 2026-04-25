@@ -70,7 +70,7 @@
   .logout-btn:hover { color: var(--text); border-color: var(--muted2); }
 
   /* ── Stats ── */
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.75rem; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.75rem; }
   .stat { background: var(--surface); border: 0.5px solid var(--border); border-radius: 10px; padding: 14px 18px; }
   .stat-label {
     font-family: var(--mono); font-size: 10px; font-weight: 500;
@@ -210,6 +210,10 @@
     <div class="stat">
       <div class="stat-label">Suspicious</div>
       <div class="stat-value {% if suspicious_count > 0 %}v-warn{% else %}v-safe{% endif %}">{{ suspicious_count }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Safe</div>
+      <div class="stat-value v-safe">{{ safe_count }}</div>
     </div>
   </div>
 

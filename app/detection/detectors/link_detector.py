@@ -1,5 +1,4 @@
 # app/detection/detectors/link_detector.py
-
 import re
 import requests
 from urllib.parse import urlparse
