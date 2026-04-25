@@ -18,7 +18,6 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from mail.parser import parser_raw_email
 from detection.scanner import scan
 
 from .models import UserToken, CommunityReport
@@ -182,14 +181,22 @@ def _fetch_and_scan_emails(service, max_results: int = 10, user_id: str | None =
         body    = _extract_body(msg_detail["payload"])
 
         try:
-            parsed_email = parser_raw_email(
-                msg["id"].encode(),
-                json.dumps({
-                    "headers": {h["name"]: h["value"] for h in headers},
-                    "body":    body,
-                }).encode(),
-            )
-            scan_result = scan(parsed_email, user_id=user_id)
+            from mail.parser import _extract_links
+            header_dict = {h["name"]: h["value"] for h in headers}
+            email_dict = {
+                "id":          msg["id"],
+                "subject":     subject or "",
+                "from":        sender or "",
+                "to":          header_dict.get("To", ""),
+                "date":        date or "",
+                "reply_to":    header_dict.get("Reply-To", ""),
+                "body_text":   body or "",
+                "body_html":   "",
+                "links":       _extract_links(body or "", ""),
+                "attachments": [],
+                "headers":     header_dict,
+            }
+            scan_result = scan(email_dict, user_id=user_id)
         except Exception as exc:
             print(f"[scan] error on {msg['id']}: {exc}")
             scan_result = None
@@ -437,12 +444,22 @@ def api_scan(request):
     except (json.JSONDecodeError, ValueError):
         return JsonResponse({"error": "Invalid JSON body"}, status=400)
 
-    email_id    = str(data.get("id", "api-scan")).encode()
-    raw_content = json.dumps(data).encode()
+    email_dict = {
+        "id":          str(data.get("id", "api-scan")),
+        "subject":     str(data.get("subject", "")),
+        "from":        str(data.get("from", "")),
+        "to":          str(data.get("to", "")),
+        "date":        str(data.get("date", "")),
+        "reply_to":    str(data.get("reply_to", "")),
+        "body_text":   str(data.get("body_text", "")),
+        "body_html":   str(data.get("body_html", "")),
+        "links":       data.get("links", []),
+        "attachments": data.get("attachments", []),
+        "headers":     data.get("headers", {}),
+    }
 
     try:
-        parsed = parser_raw_email(email_id, raw_content)
-        result = scan(parsed)
+        result = scan(email_dict)
         return JsonResponse({
             "email_id":    result.email_id,
             "final_score": result.final_score,
