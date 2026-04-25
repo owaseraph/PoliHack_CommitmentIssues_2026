@@ -4,12 +4,10 @@ from config import Config
 
 
 def get_connection():
-    return sqlite3.connect(Config.DB_PATH)
+    return sqlite3.connect(Config.DB_PATH, timeout=5)
 
 
 def init_db():
-    os.makedirs(os.path.dirname(Config.DB_PATH), exist_ok=True)
-
     conn = get_connection()
     cursor = conn.cursor()
 
