@@ -337,7 +337,7 @@
     </div>
     <div class="stat">
       <div class="stat-label">Safe</div>
-      <div class="stat-value v-safe">{{ emails|length|add:"-"|add:phishing_count }}</div>
+      <div class="stat-value v-safe">{{ emails|length|add:-phishing_count|add:-suspicious_count }}</div>
     </div>
   </div>
 
