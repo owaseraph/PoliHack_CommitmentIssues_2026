@@ -46,6 +46,9 @@ class LLMDetector(BaseDetector):
         return self._client
 
     def analyze(self, email: EmailData, pre_signals: list[DetectionSignal] | None = None) -> DetectionSignal:
+        # Skip LLM if no other detector found anything suspicious — saves quota and time
+        if pre_signals and all(s.score == 0.0 for s in pre_signals):
+            return DetectionSignal(name=self.name, score=0.0)
         try:
             raw    = self._call_llm(email, pre_signals or [])
             result = json.loads(raw)
@@ -91,6 +94,7 @@ class LLMDetector(BaseDetector):
                 system_instruction=SYSTEM_PROMPT,
                 response_mime_type="application/json",
                 temperature=0.1,
+                http_options=types.HttpOptions(timeout=10000),
             )
         )
 
