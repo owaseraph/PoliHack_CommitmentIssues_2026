@@ -98,6 +98,16 @@ log/
 instance/
 .webassets-cache
 
+# Django
+*.db
+phishguard.db
+core/migrations/
+staticfiles/
+media/
+
+# ngrok
+ngrok.yml
+
 # Jupyter Notebook
 .ipynb_checkpoints
 

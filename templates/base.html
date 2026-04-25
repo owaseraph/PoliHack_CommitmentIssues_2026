@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{% block title %}PhishGuard{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0c0e0f;
+    --surface:   #131618;
+    --surface2:  #1a1d20;
+    --border:    #242729;
+    --border2:   #2e3235;
+    --text:      #e8eaeb;
+    --muted:     #6b7075;
+    --muted2:    #4a5055;
+    --red:       #ff4d4d;
+    --red-dim:   #3d1a1a;
+    --red-mid:   #7a2828;
+    --amber:     #f0a500;
+    --amber-dim: #352400;
+    --green:     #3dd68c;
+    --green-dim: #0d2e1e;
+    --blue:      #4da6ff;
+    --blue-dim:  #0d1f33;
+    --mono:      'IBM Plex Mono', monospace;
+    --sans:      'IBM Plex Sans', sans-serif;
+  }
+
+  html { background: var(--bg); color: var(--text); font-family: var(--sans); }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse 60% 40% at 80% 10%, #1a0d0d 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 10% 80%, #0d1a10 0%, transparent 60%),
+      var(--bg);
+  }
+
+  /* ── Nav ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(12,14,15,0.85); backdrop-filter: blur(12px);
+    border-bottom: 0.5px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between; height: 56px;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+  .nav-logo-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: linear-gradient(135deg, #ff4d4d 0%, #7a1f1f 100%);
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+  }
+  .nav-logo-name {
+    font-family: var(--mono); font-size: 14px; font-weight: 500;
+    letter-spacing: 0.05em; color: var(--text);
+  }
+  .nav-logo-name span { color: var(--red); }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-link {
+    font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.06em;
+    color: var(--muted); text-decoration: none; padding: 6px 12px; border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .nav-link:hover { color: var(--text); background: var(--surface); }
+  .nav-link.active { color: var(--text); }
+  .nav-cta {
+    font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.06em;
+    color: var(--red); background: var(--red-dim); border: 0.5px solid var(--red-mid);
+    padding: 6px 14px; border-radius: 6px; text-decoration: none;
+    transition: background 0.15s;
+  }
+  .nav-cta:hover { background: #4d1e1e; }
+
+  .page { max-width: 1000px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+
+  {% block extra_styles %}{% endblock %}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="{% url 'home' %}">
+    <div class="nav-logo-icon">🛡</div>
+    <div class="nav-logo-name">Phish<span>Guard</span></div>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link {% block nav_home %}{% endblock %}" href="{% url 'home' %}">HOME</a>
+    <a class="nav-link {% block nav_community %}{% endblock %}" href="{% url 'community' %}">COMMUNITY</a>
+    <a class="nav-link {% block nav_download %}{% endblock %}" href="{% url 'download' %}">DOWNLOAD</a>
+    {% if is_logged_in %}
+      <a class="nav-link {% block nav_dashboard %}{% endblock %}" href="{% url 'dashboard' %}">DASHBOARD</a>
+      <a class="nav-cta" href="{% url 'logout' %}">LOGOUT</a>
+    {% else %}
+      <a class="nav-cta" href="{% url 'login' %}">LOGIN</a>
+    {% endif %}
+  </div>
+</nav>
+
+<div class="page">
+  {% block content %}{% endblock %}
+</div>
+</body>
+</html>

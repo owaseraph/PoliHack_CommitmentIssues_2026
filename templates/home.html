@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% block title %}PhishGuard — Real-time Phishing Protection{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block extra_styles %}
+  /* ── Hero ── */
+  .hero {
+    text-align: center; padding: 5rem 1rem 4rem;
+    animation: fadeUp 0.4s ease both;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--red); background: var(--red-dim); border: 0.5px solid var(--red-mid);
+    padding: 5px 12px; border-radius: 99px; margin-bottom: 1.75rem;
+  }
+  .hero h1 {
+    font-family: var(--mono); font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 500;
+    line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 1.25rem;
+  }
+  .hero h1 span { color: var(--red); }
+  .hero p {
+    font-size: 15px; color: var(--muted); line-height: 1.7;
+    max-width: 520px; margin: 0 auto 2.5rem;
+  }
+  .hero-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: 0.08em;
+    color: var(--red); background: var(--red-dim); border: 0.5px solid var(--red-mid);
+    padding: 12px 28px; border-radius: 8px; text-decoration: none;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover { background: #4d1e1e; }
+  .btn-secondary {
+    font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: 0.08em;
+    color: var(--muted); background: var(--surface); border: 0.5px solid var(--border2);
+    padding: 12px 28px; border-radius: 8px; text-decoration: none;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .btn-secondary:hover { color: var(--text); border-color: var(--muted2); }
+
+  /* ── Stats strip ── */
+  .stats-strip {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    margin: 0 0 4rem;
+    animation: fadeUp 0.4s 0.1s ease both;
+  }
+  .stat-card {
+    background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px;
+    padding: 20px 22px; text-align: center;
+  }
+  .stat-num {
+    font-family: var(--mono); font-size: 2rem; font-weight: 400;
+    color: var(--red); margin-bottom: 4px;
+  }
+  .stat-desc { font-size: 12px; color: var(--muted); }
+
+  /* ── Section ── */
+  .section-label {
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 1.5rem; text-align: center;
+  }
+  .section { margin-bottom: 4.5rem; }
+
+  /* ── Feature cards ── */
+  .features {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px;
+    animation: fadeUp 0.4s 0.15s ease both;
+  }
+  .feature-card {
+    background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px;
+    padding: 1.5rem; transition: border-color 0.15s;
+  }
+  .feature-card:hover { border-color: var(--border2); }
+  .feature-icon {
+    width: 38px; height: 38px; border-radius: 9px; margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .fi-red   { background: var(--red-dim);   border: 0.5px solid var(--red-mid); }
+  .fi-green { background: var(--green-dim); border: 0.5px solid #1a5c3a; }
+  .fi-blue  { background: var(--blue-dim);  border: 0.5px solid #1e3d5c; }
+  .fi-amber { background: var(--amber-dim); border: 0.5px solid #6b4500; }
+  .feature-title {
+    font-family: var(--mono); font-size: 13px; font-weight: 500;
+    margin-bottom: 8px; color: var(--text);
+  }
+  .feature-desc { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+  /* ── Steps ── */
+  .steps {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px; animation: fadeUp 0.4s 0.2s ease both;
+  }
+  .step {
+    background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px;
+    padding: 1.5rem; display: flex; flex-direction: column; gap: 10px;
+  }
+  .step-num {
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.1em; color: var(--muted);
+  }
+  .step-title {
+    font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--text);
+  }
+  .step-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+  /* ── CTA banner ── */
+  .cta-banner {
+    background: var(--surface); border: 0.5px solid var(--red-mid);
+    border-radius: 16px; padding: 2.5rem; text-align: center;
+    animation: fadeUp 0.4s 0.25s ease both;
+  }
+  .cta-banner h2 {
+    font-family: var(--mono); font-size: 1.4rem; font-weight: 500; margin-bottom: 10px;
+  }
+  .cta-banner h2 span { color: var(--red); }
+  .cta-banner p { font-size: 13px; color: var(--muted); margin-bottom: 1.75rem; line-height: 1.6; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <div class="hero-badge">🛡 AI-Powered Protection</div>
+  <h1>Stop <span>Phishing</span><br/>Before It Stops You</h1>
+  <p>PhishGuard scans your Gmail inbox in real time, flagging suspicious emails with multi-layer AI analysis — so you stay one step ahead of attackers.</p>
+  <div class="hero-actions">
+    {% if is_logged_in %}
+      <a class="btn-primary" href="{% url 'dashboard' %}">OPEN DASHBOARD</a>
+    {% else %}
+      <a class="btn-primary" href="{% url 'login' %}">CONNECT GMAIL</a>
+    {% endif %}
+    <a class="btn-secondary" href="{% url 'download' %}">GET THE EXTENSION</a>
+  </div>
+</div>
+
+<div class="stats-strip">
+  <div class="stat-card">
+    <div class="stat-num">{{ stats.users_protected|default:0 }}</div>
+    <div class="stat-desc">Users protected</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" style="color:var(--green)">3</div>
+    <div class="stat-desc">Detection layers</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" style="color:var(--amber)">{{ stats.community_reports|default:0 }}</div>
+    <div class="stat-desc">Community reports</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">Features</div>
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon fi-red">🔍</div>
+      <div class="feature-title">Header Analysis</div>
+      <div class="feature-desc">Inspects SPF, DKIM, DMARC and sender routing to catch spoofed origins before you open the email.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-amber">🔗</div>
+      <div class="feature-title">Link Scanning</div>
+      <div class="feature-desc">Every URL in the email is checked against Google Safe Browsing and analysed for deceptive domain patterns.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-blue">🤖</div>
+      <div class="feature-title">AI Verdict</div>
+      <div class="feature-desc">Gemini reads the full email body and returns a scored verdict with human-readable reasoning for each flag.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-green">👥</div>
+      <div class="feature-title">Community Intel</div>
+      <div class="feature-desc">Crowd-sourced phishing reports from the PhishGuard community help identify new campaigns fast.</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">How it works</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">STEP 01</div>
+      <div class="step-title">Connect Gmail</div>
+      <div class="step-desc">Sign in with Google and grant read-only Gmail access. No passwords stored — OAuth only.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 02</div>
+      <div class="step-title">Scan Inbox</div>
+      <div class="step-desc">PhishGuard fetches your latest emails and runs them through three independent detection layers simultaneously.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 03</div>
+      <div class="step-title">Review Results</div>
+      <div class="step-desc">Each email gets a risk score, a verdict badge, and expandable AI analysis so you understand exactly what was found.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 04</div>
+      <div class="step-title">Stay Protected</div>
+      <div class="step-desc">Install the browser extension to get alerts directly inside Gmail as new emails arrive.</div>
+    </div>
+  </div>
+</div>
+
+<div class="cta-banner">
+  <h2>Ready to secure your <span>inbox?</span></h2>
+  <p>Connect your Gmail account in seconds. No credit card, no data selling — just real protection.</p>
+  {% if is_logged_in %}
+    <a class="btn-primary" href="{% url 'dashboard' %}">GO TO DASHBOARD</a>
+  {% else %}
+    <a class="btn-primary" href="{% url 'login' %}">LOGIN WITH GOOGLE</a>
+  {% endif %}
+</div>
+{% endblock %}
