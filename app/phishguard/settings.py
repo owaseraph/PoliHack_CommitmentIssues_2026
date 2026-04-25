@@ -81,13 +81,17 @@ SESSION_COOKIE_SECURE   = not DEBUG  # HTTPS-only cookies in production
 _SITE_URL = SITE_URL.rstrip("/")
 CSRF_TRUSTED_ORIGINS = [_SITE_URL] if _SITE_URL else []
 
+# Tell Django it's behind an HTTPS-terminating reverse proxy (Railway/ngrok)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 LANGUAGE_CODE = "en-us"
 TIME_ZONE     = "UTC"
 USE_I18N      = True
 USE_TZ        = True
 
 STATIC_URL      = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+_static_dir = BASE_DIR / "static"
+STATICFILES_DIRS = [_static_dir] if _static_dir.exists() else []
 STATIC_ROOT     = BASE_DIR / "staticfiles"
 STORAGES = {
     "staticfiles": {
