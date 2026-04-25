@@ -81,6 +81,9 @@ SESSION_COOKIE_SECURE   = not DEBUG  # HTTPS-only cookies in production
 _SITE_URL = SITE_URL.rstrip("/")
 CSRF_TRUSTED_ORIGINS = [_SITE_URL] if _SITE_URL else []
 
+# Tell Django it's behind an HTTPS-terminating reverse proxy (Railway/ngrok)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 LANGUAGE_CODE = "en-us"
 TIME_ZONE     = "UTC"
 USE_I18N      = True

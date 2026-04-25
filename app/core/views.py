@@ -270,10 +270,20 @@ def oauth2callback(request):
     )
     flow.code_verifier = code_verifier
 
-    callback_url = request.build_absolute_uri()
-    # In local dev Django sees http:// even if the browser sent https://
-    if callback_url.startswith("https://") and not os.environ.get("HTTPS"):
-        callback_url = "http://" + callback_url[len("https://"):]
+    from django.conf import settings as _settings
+    from urllib.parse import urlparse, urlunparse
+    _site_url = getattr(_settings, "SITE_URL", "").rstrip("/")
+    if _site_url:
+        # On Railway/ngrok: Django is behind an HTTPS proxy.
+        # Replace scheme+host with SITE_URL so it matches the registered redirect URI.
+        _parsed = urlparse(request.build_absolute_uri())
+        _site_parsed = urlparse(_site_url)
+        callback_url = urlunparse(_site_parsed._replace(path=_parsed.path, query=_parsed.query))
+    else:
+        callback_url = request.build_absolute_uri()
+        # Local dev: downgrade to http if OAUTHLIB_INSECURE_TRANSPORT is set
+        if callback_url.startswith("https://") and os.environ.get("OAUTHLIB_INSECURE_TRANSPORT"):
+            callback_url = "http://" + callback_url[len("https://"):]
 
     flow.fetch_token(authorization_response=callback_url)
     creds = flow.credentials
