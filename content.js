@@ -1,35 +1,76 @@
+/* -----------------------------
+   VERDICT PAGE GUARD
+------------------------------*/
 const isVerdictPage = window.location.href.includes("/verdict");
 
 if (isVerdictPage) {
     console.log("[TrustExt] 🚫 Verdict page detected — disabling extension UI");
-
-    // stop entire script early
     throw new Error("TrustExt disabled on verdict page");
 }
 
+/* -----------------------------
+   STATE
+------------------------------*/
+let lastSignature = "";
+let lastScanQueued = false;
 let lastScanTime = 0;
-const SCAN_INTERVAL = 5000; // 5 seconds
-
-let lastResult = null;
-let lastRenderTime = 0;
-
-const SIGNIFICANT_CHANGE = 0.2;
+const SCAN_COOLDOWN = 800; // prevents flood
 
 /* -----------------------------
-   PAGE DATA EXTRACTION
+   GET RAW PAGE TEXT
+------------------------------*/
+function getPageText() {
+    return document.body.innerText || "";
+}
+
+/* -----------------------------
+   EXTRACT LINKS FROM TEXT (REGEX)
+------------------------------*/
+function extractLinks(text) {
+    const urlRegex = /https?:\/\/[^\s"'<>]+/gi;
+
+    const matches = text.match(urlRegex) || [];
+
+    const cleaned = matches.map(url => {
+        try {
+            const u = new URL(url);
+            return u.origin + u.pathname;
+        } catch {
+            return null;
+        }
+    }).filter(Boolean);
+
+    return [...new Set(cleaned)];
+}
+
+/* -----------------------------
+   PAGE DATA
 ------------------------------*/
 function getPageData() {
-    const text = document.body.innerText || "";
-
-    const links = Array.from(document.querySelectorAll("a"))
-        .map(a => a.href)
-        .filter(Boolean);
+    const text = getPageText();
+    const links = extractLinks(text);
 
     return { text, links };
 }
 
 /* -----------------------------
-   SEND DATA TO BACKEND
+   LOGGING (separate as requested)
+------------------------------*/
+function logUserId(user_id) {
+    console.log("[TrustExt] 👤 USER ID:", user_id);
+}
+
+function logLinks(links) {
+    console.log("[TrustExt] 🔗 LINKS:", links);
+}
+
+function logPayload(payload) {
+    console.log("[TrustExt] 📦 FULL PAYLOAD:");
+    console.log(JSON.stringify(payload, null, 2));
+}
+
+/* -----------------------------
+   SEND DATA
 ------------------------------*/
 function sendData(reason = "manual") {
     chrome.storage.local.get(["user_id"], (res) => {
@@ -37,18 +78,16 @@ function sendData(reason = "manual") {
 
         const { text, links } = getPageData();
 
+        logUserId(user_id);
+        logLinks(links);
+
         const payload = {
             user_id,
             data: text,
             links
         };
 
-        console.log("[TrustExt] 📤 Sending request:", {
-            reason,
-            user_id,
-            text_length: text,
-            links_count: links
-        });
+        logPayload(payload);
 
         chrome.runtime.sendMessage({
             type: "ANALYZE",
@@ -58,110 +97,120 @@ function sendData(reason = "manual") {
 }
 
 /* -----------------------------
-   SCAN CONTROLLER (15s limit)
+   SAFE CHANGE DETECTION
 ------------------------------*/
-function tryScan(reason) {
+function computeSignature(text, links) {
+    // IMPORTANT: stable hash (order-independent)
+    const sortedLinks = [...links].sort().join("|");
+    return text.length + "|" + sortedLinks;
+}
+
+/* -----------------------------
+   SCAN CONTROLLER (ANTI-SPAM)
+------------------------------*/
+function checkForChanges(reason) {
     const now = Date.now();
 
-    if (now - lastScanTime < SCAN_INTERVAL) {
-        console.log("[TrustExt] ⏱ Scan blocked (cooldown):", reason);
-        return;
-    }
+    if (now - lastScanTime < SCAN_COOLDOWN) return;
 
+    const { text, links } = getPageData();
+    const signature = computeSignature(text, links);
+
+    if (signature === lastSignature) return;
+
+    lastSignature = signature;
     lastScanTime = now;
 
-    console.log("[TrustExt] 🚀 Scan allowed:", reason);
+    console.log("[TrustExt] 🔄 CHANGE DETECTED:", reason);
+
     sendData(reason);
 }
 
 /* -----------------------------
-   POPUP RENDERER
+   MUTATION OBSERVER (IGNORES POPUP)
+------------------------------*/
+let mutationTimeout = null;
+
+const observer = new MutationObserver((mutations) => {
+
+    // 🚨 IGNORE ANYTHING INSIDE EXTENSION POPUP
+    for (const m of mutations) {
+        if (m.target.closest?.("#trust-popup")) return;
+    }
+
+    clearTimeout(mutationTimeout);
+
+    mutationTimeout = setTimeout(() => {
+        checkForChanges("dom change");
+    }, 200);
+});
+
+observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+    attributes: true
+});
+
+/* -----------------------------
+   POPUP UI (SAFE - NO FEEDBACK LOOP)
 ------------------------------*/
 function renderPopup(result) {
-    console.log("[TrustExt] 🧩 Rendering popup:", result);
-
     const old = document.getElementById("trust-popup");
     if (old) old.remove();
-
-    const isSafe = result.trust_score >= 0.5;
-
-    const verdictUrl =
-        result.verdict_url || "http://localhost:5000/verdict/free_user";
 
     const div = document.createElement("div");
     div.id = "trust-popup";
 
-    /* -------------------------
-       SAFE: small badge (NO SCORE)
-    --------------------------*/
+    const isSafe = result.trust_score >= 70;
+    const verdictUrl =
+        result.verdict_url || "http://localhost:5000/verdict/free_user";
+
     if (isSafe) {
-        div.style.position = "fixed";
-        div.style.bottom = "20px";
-        div.style.right = "20px";
-        div.style.padding = "6px 10px";
-        div.style.borderRadius = "20px";
-        div.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)";
-        div.style.fontFamily = "Arial, sans-serif";
-        div.style.zIndex = 999999;
-        div.style.background = "#e8f8f5";
-        div.style.color = "#2ecc71";
-        div.style.fontSize = "12px";
-        div.style.fontWeight = "600";
-        div.style.border = "1px solid rgba(46, 204, 113, 0.3)";
+        div.style.cssText = `
+            position:fixed;
+            bottom:20px;
+            right:20px;
+            padding:6px 10px;
+            border-radius:20px;
+            background:#e8f8f5;
+            color:#2ecc71;
+            font-family:Arial;
+            font-size:12px;
+            font-weight:600;
+            z-index:999999;
+            border:1px solid rgba(46,204,113,0.3);
+        `;
+        div.innerHTML = "✔ Verified";
 
-        div.innerHTML = `✔ Verified`;
-
-    /* -------------------------
-       UNSAFE: big warning (WITH SCORE)
-    --------------------------*/
     } else {
-        div.style.position = "fixed";
-        div.style.bottom = "20px";
-        div.style.right = "20px";
-        div.style.width = "340px";
-        div.style.padding = "16px";
-        div.style.borderRadius = "12px";
-        div.style.boxShadow = "0 8px 24px rgba(0,0,0,0.25)";
-        div.style.fontFamily = "Arial, sans-serif";
-        div.style.zIndex = 999999;
-        div.style.background = "#fff";
-        div.style.borderLeft = "6px solid #e74c3c";
-        div.style.color = "#111";
+        div.style.cssText = `
+            position:fixed;
+            bottom:20px;
+            right:20px;
+            width:340px;
+            padding:16px;
+            background:white;
+            border-left:6px solid #e74c3c;
+            font-family:Arial;
+            z-index:999999;
+            box-shadow:0 8px 24px rgba(0,0,0,0.25);
+        `;
 
         div.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <strong style="color:#e74c3c; font-size:15px;">
-                    ⚠ Suspicious Page
-                </strong>
-
-                <span style="
-                    font-size:12px;
-                    font-weight:600;
-                    color:#e74c3c;
-                    background:rgba(231,76,60,0.1);
-                    padding:2px 6px;
-                    border-radius:6px;
-                ">
+            <div style="display:flex;justify-content:space-between;">
+                <strong style="color:#e74c3c;">⚠ Suspicious Page</strong>
+                <span style="font-weight:bold;color:#e74c3c;">
                     ${result.trust_score}
                 </span>
             </div>
 
-            <p style="
-                margin:10px 0;
-                font-size:13px;
-                color:#222;
-                line-height:1.4;
-            ">
+            <p style="font-size:13px;margin:10px 0;">
                 ${result.description || "No description available"}
             </p>
 
             <a href="${verdictUrl}" target="_blank"
-               style="
-                font-size:12px;
-                color:#3498db;
-                text-decoration:none;
-                font-weight:500;
-            ">
+               style="font-size:12px;color:#3498db;">
                 See full verdict →
             </a>
         `;
@@ -171,65 +220,18 @@ function renderPopup(result) {
 }
 
 /* -----------------------------
-   MESSAGE HANDLER (STABLE UI)
+   RESULT HANDLER
 ------------------------------*/
 chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type !== "RESULT") return;
 
-    const newResult = msg.payload;
+    console.log("[TrustExt] 📥 RESULT RECEIVED:", msg.payload);
 
-    console.log("[TrustExt] 📥 Result received:", newResult);
-
-    // first render
-    if (!lastResult) {
-        lastResult = newResult;
-        lastRenderTime = Date.now();
-        renderPopup(newResult);
-        return;
-    }
-
-    const scoreDiff = Math.abs(newResult.trust_score - lastResult.trust_score);
-
-    const stateChanged =
-        (newResult.trust_score >= 0.5) !== (lastResult.trust_score >= 0.5);
-
-    console.log("[TrustExt] 📊 Compare:", {
-        scoreDiff,
-        stateChanged
-    });
-
-    // ignore tiny fluctuations
-    if (!stateChanged && scoreDiff < SIGNIFICANT_CHANGE) {
-        console.log("[TrustExt] ⏱ Ignored minor update");
-        return;
-    }
-
-    lastResult = newResult;
-    lastRenderTime = Date.now();
-    renderPopup(newResult);
+    renderPopup(msg.payload);
 });
 
 /* -----------------------------
    INITIAL SCAN
 ------------------------------*/
 console.log("[TrustExt] 🚀 Initial scan");
-tryScan("initial");
-
-/* -----------------------------
-   SCROLL TRIGGER
-------------------------------*/
-window.addEventListener("scroll", () => {
-    tryScan("scroll");
-});
-
-/* -----------------------------
-   DOM CHANGES (NO SPAM)
-------------------------------*/
-const observer = new MutationObserver(() => {
-    tryScan("dom change");
-});
-
-observer.observe(document.body, {
-    childList: true,
-    subtree: true
-});
+checkForChanges("initial");

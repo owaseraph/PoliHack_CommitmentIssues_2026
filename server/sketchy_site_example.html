@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Secure Mail Portal</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f2f2f2;
+      margin: 0;
+    }
+
+    .header {
+      background: #202124;
+      color: white;
+      padding: 15px;
+      font-size: 18px;
+    }
+
+    .inbox {
+      max-width: 800px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .email {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+
+    .email:hover {
+      background: #f9f9f9;
+    }
+
+    .sender {
+      font-weight: bold;
+    }
+
+    .subject {
+      color: #444;
+    }
+
+    .danger {
+      color: red;
+      font-weight: bold;
+    }
+
+    .preview {
+      display: none;
+      padding: 15px;
+      background: #fff8f8;
+      border-top: 1px solid #eee;
+    }
+
+    a {
+      color: blue;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="header">
+  SecureMail Inbox (Beta)
+</div>
+
+<div class="inbox">
+
+  <div class="email" onclick="toggle(this)">
+    <div class="sender">PayPal Security</div>
+    <div class="subject danger">URGENT: Verify your account immediately</div>
+    <div class="preview">
+      Your account is suspended. Click below to verify:
+      <br>
+      <a href="#">http://login-paypal-security.ru</a>
+    </div>
+  </div>
+
+  <div class="email" onclick="toggle(this)">
+    <div class="sender">Netflix Support</div>
+    <div class="subject danger">Payment failed - update billing</div>
+    <div class="preview">
+      Please update your payment method:
+      <br>
+      <a href="#">http://verify-account-update.com</a>
+    </div>
+  </div>
+
+  <div class="email" onclick="toggle(this)">
+    <div class="sender">Amazon Deals</div>
+    <div class="subject">You won a $500 gift card!</div>
+    <div class="preview">
+      Claim your reward now:
+      <br>
+      <a href="#">http://free-money-now.com</a>
+    </div>
+  </div>
+
+  <div class="email" onclick="toggle(this)">
+    <div class="sender">Wikipedia</div>
+    <div class="subject">Weekly digest</div>
+    <div class="preview">
+      Read top articles:
+      <br>
+      <a href="#">https://wikipedia.org</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggle(el) {
+  const preview = el.querySelector(".preview");
+  preview.style.display = preview.style.display === "block" ? "none" : "block";
+}
+</script>
+
+</body>
+</html>
