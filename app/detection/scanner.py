@@ -157,14 +157,14 @@ def _aggregate(signals: list[DetectionSignal]) -> float:
 
     # Panic override: one very confident detector is enough
     max_score = max(s.score for s in signals)
-    if max_score >= 0.9:
+    if max_score >= 0.6:
         # Blend: 70% from the confident detector, 30% from weighted avg
         final = 0.7 * max_score + 0.3 * weighted_avg
     else:
         final = weighted_avg
 
     # Corroboration bonus: multiple detectors firing together
-    firing = sum(1 for s in signals if s.score >= 0.5)
+    firing = sum(1 for s in signals if s.score >= 0.4)
     if firing >= 2:
         final = min(final * 1.15, 1.0)  # +15% boost, capped at 1.0
 
