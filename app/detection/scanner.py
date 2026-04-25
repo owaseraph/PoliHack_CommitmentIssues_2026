@@ -3,11 +3,12 @@ from detection.base import BaseDetector
 from detection.detectors.header_detector import HeaderDetector
 from detection.detectors.link_detector import LinkDetector
 from detection.detectors.llm_detector import LLMDetector
+from detection.detectors.plugin_detector import PluginDetector
 from config import PHISHING_SCORE_THRESHOLD
 import re
 
 
-# Registry of detectors
+# Registry of built-in detectors (always run for every user)
 DETECTORS: list[BaseDetector] = [
     HeaderDetector(),
     LinkDetector(),
@@ -21,14 +22,20 @@ TRUSTED_DOMAINS = {
 }
 
 # Public API
-def scan(raw_email: dict) -> ScanResult:
+def scan(raw_email: dict, user_id: str | None = None) -> ScanResult:
     """
     Entry point for the detection pipeline.
-    Accepts raw parser output, returns a ScanResult.
+    Accepts raw parser output and an optional user_id to load installed plugins.
+    Returns a ScanResult.
     """
 
     email = EmailData.from_dict(raw_email)
-    if _is_trusted_sender(email):
+
+    # Check trusted-domain list (built-in) — but only if no plugins override it
+    user_plugins = _load_user_plugins(user_id) if user_id else []
+
+    # If a plugin_domain_list trusts this sender, skip full scan
+    if _is_trusted_sender(email) and not _plugin_overrides_trust(email, user_plugins):
         return ScanResult(
             email_id=email.id,
             subject=email.subject,
@@ -38,7 +45,7 @@ def scan(raw_email: dict) -> ScanResult:
             signals=[DetectionSignal(name="trusted_sender", score=0.0, flags=["domain_whitelisted"])]
         )
 
-    signals = _run_detectors(email)
+    signals = _run_detectors(email, user_plugins)
     final_score = _aggregate(signals)
 
     return ScanResult(
@@ -55,9 +62,48 @@ def scan(raw_email: dict) -> ScanResult:
 
 # Helpers
 
-def _run_detectors(email: EmailData) -> list[DetectionSignal]:
+def _load_user_plugins(user_id: str) -> list[PluginDetector]:
+    """Load all enabled plugins installed by this user from the DB."""
+    try:
+        from core.models import UserPlugin
+        installs = (
+            UserPlugin.objects
+            .filter(user_id=user_id, enabled=True)
+            .select_related("plugin")
+        )
+        detectors = []
+        for install in installs:
+            p = install.plugin
+            if p.is_published:
+                detectors.append(PluginDetector(
+                    plugin_id=p.pk,
+                    plugin_name=p.name,
+                    plugin_type=p.plugin_type,
+                    rules=p.get_rules_list(),
+                ))
+        return detectors
+    except Exception as e:
+        print(f"[Scanner] Failed to load user plugins for {user_id}: {e}")
+        return []
+
+
+def _plugin_overrides_trust(email: EmailData, plugins: list[PluginDetector]) -> bool:
+    """
+    Returns True if any blacklist plugin flags this email,
+    meaning we should NOT skip it even if domain is in built-in trusted list.
+    """
+    for plugin in plugins:
+        if plugin._plugin_type == "blacklist":
+            signal = plugin.analyze(email)
+            if signal.score > 0:
+                return True
+    return False
+
+
+def _run_detectors(email: EmailData, user_plugins: list[PluginDetector] | None = None) -> list[DetectionSignal]:
     signals = []
-    for detector in DETECTORS:
+    all_detectors = list(DETECTORS) + (user_plugins or [])
+    for detector in all_detectors:
         try:
             if detector.name == "llm_analysis":
                 signals.append(detector.analyze(email, pre_signals=signals))
@@ -99,7 +145,11 @@ def _aggregate(signals: list[DetectionSignal]) -> float:
     total_weight = 0.0
 
     for signal in signals:
-        weight = WEIGHTS.get(signal.name, 0.2)
+        # User plugin signals use a lower default weight (user-defined rules)
+        if signal.name.startswith("plugin:"):
+            weight = WEIGHTS.get(signal.name, 0.3)
+        else:
+            weight = WEIGHTS.get(signal.name, 0.2)
         weighted_sum += signal.score * weight
         total_weight += weight
 

@@ -165,7 +165,7 @@ def _enrich_email(email_entry: dict) -> dict:
     return email_entry
 
 
-def _fetch_and_scan_emails(service, max_results: int = 10) -> list[dict]:
+def _fetch_and_scan_emails(service, max_results: int = 10, user_id: str | None = None) -> list[dict]:
     """Fetch emails from Gmail API and run phishing detection on each."""
     results  = service.users().messages().list(userId="me", maxResults=max_results).execute()
     emails_data = []
@@ -189,7 +189,7 @@ def _fetch_and_scan_emails(service, max_results: int = 10) -> list[dict]:
                     "body":    body,
                 }).encode(),
             )
-            scan_result = scan(parsed_email)
+            scan_result = scan(parsed_email, user_id=user_id)
         except Exception as exc:
             print(f"[scan] error on {msg['id']}: {exc}")
             scan_result = None
@@ -324,7 +324,7 @@ def dashboard(request):
         return redirect(reverse("login"))
 
     service     = build("gmail", "v1", credentials=creds)
-    emails_data = _fetch_and_scan_emails(service)
+    emails_data = _fetch_and_scan_emails(service, user_id=user_id)
 
     phishing_count   = sum(1 for e in emails_data if e.get("is_phishing"))
     suspicious_count = sum(
@@ -454,3 +454,175 @@ def api_scan(request):
         })
     except Exception as exc:
         return JsonResponse({"error": str(exc)}, status=500)
+
+
+# ── Marketplace views ─────────────────────────────────────────────────────────
+
+def marketplace(request):
+    """Browse and install community plugins."""
+    from .models import Plugin, UserPlugin, PluginUpvote
+
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return redirect(reverse("login"))
+
+    type_filter = request.GET.get("type", "")
+    search      = request.GET.get("q", "").strip()
+
+    plugins = Plugin.objects.filter(is_published=True)
+    if type_filter:
+        plugins = plugins.filter(plugin_type=type_filter)
+    if search:
+        plugins = plugins.filter(name__icontains=search) | plugins.filter(description__icontains=search)
+
+    # Annotate which plugins this user has installed
+    installed_ids = set(
+        UserPlugin.objects.filter(user_id=user_id)
+        .values_list("plugin_id", flat=True)
+    )
+    upvoted_ids = set(
+        PluginUpvote.objects.filter(user_id=user_id)
+        .values_list("plugin_id", flat=True)
+    )
+
+    plugin_list = []
+    for p in plugins:
+        plugin_list.append({
+            "plugin":      p,
+            "installed":   p.pk in installed_ids,
+            "upvoted":     p.pk in upvoted_ids,
+        })
+
+    return render(request, "marketplace.html", {
+        "plugin_list":   plugin_list,
+        "type_filter":   type_filter,
+        "search":        search,
+        "plugin_types":  Plugin.PLUGIN_TYPES,
+        "user_name":     request.session.get("user_name", ""),
+        "user_email":    request.session.get("user_email", ""),
+    })
+
+
+@require_POST
+def marketplace_install(request, plugin_id):
+    """Install (or uninstall) a plugin for the current user."""
+    from .models import Plugin, UserPlugin
+
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse({"error": "Not logged in"}, status=401)
+
+    plugin = get_object_or_404(Plugin, pk=plugin_id, is_published=True)
+
+    existing = UserPlugin.objects.filter(user_id=user_id, plugin=plugin).first()
+    if existing:
+        existing.delete()
+        plugin.installs = max(0, plugin.installs - 1)
+        plugin.save()
+        return JsonResponse({"installed": False, "installs": plugin.installs})
+    else:
+        UserPlugin.objects.create(user_id=user_id, plugin=plugin, enabled=True)
+        plugin.installs += 1
+        plugin.save()
+        return JsonResponse({"installed": True, "installs": plugin.installs})
+
+
+@require_POST
+def marketplace_toggle(request, plugin_id):
+    """Enable or disable an installed plugin without uninstalling."""
+    from .models import UserPlugin
+
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse({"error": "Not logged in"}, status=401)
+
+    install = get_object_or_404(UserPlugin, user_id=user_id, plugin_id=plugin_id)
+    install.enabled = not install.enabled
+    install.save()
+    return JsonResponse({"enabled": install.enabled})
+
+
+@require_POST
+def marketplace_upvote(request, plugin_id):
+    """Toggle upvote on a plugin (one vote per user per plugin)."""
+    from .models import Plugin, PluginUpvote
+
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse({"error": "Not logged in"}, status=401)
+
+    plugin = get_object_or_404(Plugin, pk=plugin_id, is_published=True)
+
+    existing = PluginUpvote.objects.filter(user_id=user_id, plugin=plugin).first()
+    if existing:
+        existing.delete()
+        plugin.upvotes = max(0, plugin.upvotes - 1)
+        plugin.save()
+        return JsonResponse({"upvoted": False, "upvotes": plugin.upvotes})
+    else:
+        PluginUpvote.objects.create(user_id=user_id, plugin=plugin)
+        plugin.upvotes += 1
+        plugin.save()
+        return JsonResponse({"upvoted": True, "upvotes": plugin.upvotes})
+
+
+def plugin_create(request):
+    """Create and publish a new plugin."""
+    from .models import Plugin
+
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return redirect(reverse("login"))
+
+    if request.method == "POST":
+        name        = request.POST.get("name",        "").strip()
+        description = request.POST.get("description", "").strip()
+        plugin_type = request.POST.get("plugin_type", "").strip()
+        rules       = request.POST.get("rules",       "").strip()
+
+        valid_types = [t[0] for t in Plugin.PLUGIN_TYPES]
+        if name and plugin_type in valid_types and rules:
+            Plugin.objects.create(
+                name=name,
+                description=description,
+                plugin_type=plugin_type,
+                rules=rules,
+                author_id=user_id,
+                author_email=request.session.get("user_email", ""),
+                is_published=True,
+            )
+            return redirect(reverse("marketplace"))
+
+    return render(request, "plugin_create.html", {
+        "plugin_types": Plugin.PLUGIN_TYPES,
+        "user_name":    request.session.get("user_name", ""),
+        "user_email":   request.session.get("user_email", ""),
+    })
+
+
+def my_plugins(request):
+    """View and manage the user's installed plugins."""
+    from .models import UserPlugin
+
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return redirect(reverse("login"))
+
+    installs = (
+        UserPlugin.objects
+        .filter(user_id=user_id)
+        .select_related("plugin")
+        .order_by("-installed_at")
+    )
+    authored = (
+        __import__("core.models", fromlist=["Plugin"])
+        .Plugin.objects.filter(author_id=user_id)
+        .order_by("-created_at")
+    )
+
+    return render(request, "my_plugins.html", {
+        "installs":  installs,
+        "authored":  authored,
+        "user_name": request.session.get("user_name", ""),
+        "user_email": request.session.get("user_email", ""),
+    })

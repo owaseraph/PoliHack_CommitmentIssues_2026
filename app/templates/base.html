@@ -88,6 +88,7 @@
   <div class="nav-links">
     <a class="nav-link {% block nav_home %}{% endblock %}" href="{% url 'home' %}">HOME</a>
     <a class="nav-link {% block nav_community %}{% endblock %}" href="{% url 'community' %}">COMMUNITY</a>
+    <a class="nav-link {% block nav_marketplace %}{% endblock %}" href="{% url 'marketplace' %}">MARKETPLACE</a>
     <a class="nav-link {% block nav_download %}{% endblock %}" href="{% url 'download' %}">DOWNLOAD</a>
     {% if is_logged_in %}
       <a class="nav-link {% block nav_dashboard %}{% endblock %}" href="{% url 'dashboard' %}">DASHBOARD</a>

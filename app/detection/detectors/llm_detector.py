@@ -33,7 +33,13 @@ class LLMDetector(BaseDetector):
     name = "llm_analysis"
 
     def __init__(self):
-        self.client = genai.Client(api_key=GEMINI_API_KEY)
+        self._client = None  # lazy — instantiated on first use to avoid import-time crash
+
+    @property
+    def client(self):
+        if self._client is None:
+            self._client = genai.Client(api_key=GEMINI_API_KEY)
+        return self._client
 
     def analyze(self, email: EmailData, pre_signals: list[DetectionSignal] | None = None) -> DetectionSignal:
         try:

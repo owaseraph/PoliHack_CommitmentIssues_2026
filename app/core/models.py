@@ -121,3 +121,90 @@ class CommunityReport(models.Model):
             reported_by=reported_by,
             created_at__gte=since,
         ).exists()
+
+
+# ── Marketplace Plugin models ─────────────────────────────────────────────────
+
+class Plugin(models.Model):
+    """
+    A community-created detection plugin that can be installed by any user.
+
+    Plugin types:
+      - blacklist   : a newline-separated list of sender domains/emails to block
+      - keyword     : a newline-separated list of body/subject keywords to flag
+      - regex       : a newline-separated list of regex patterns applied to body+subject
+      - domain_list : a newline-separated list of domains treated as trusted (whitelist)
+
+    The 'rules' field stores the raw content — newline-separated strings.
+    The plugin engine in detection/ interprets them at scan time.
+    """
+
+    TYPE_BLACKLIST   = "blacklist"
+    TYPE_KEYWORD     = "keyword"
+    TYPE_REGEX       = "regex"
+    TYPE_DOMAIN_LIST = "domain_list"
+
+    PLUGIN_TYPES = [
+        (TYPE_BLACKLIST,   "Sender Blacklist"),
+        (TYPE_KEYWORD,     "Keyword Filter"),
+        (TYPE_REGEX,       "Regex Pattern"),
+        (TYPE_DOMAIN_LIST, "Trusted Domain List"),
+    ]
+
+    name         = models.CharField(max_length=200)
+    description  = models.TextField(blank=True)
+    plugin_type  = models.CharField(max_length=20, choices=PLUGIN_TYPES)
+    rules        = models.TextField(help_text="Newline-separated rules/entries")
+    author_id    = models.CharField(max_length=255)   # Google user ID
+    author_email = models.CharField(max_length=255, blank=True)
+    is_published = models.BooleanField(default=False)
+    installs     = models.IntegerField(default=0)
+    upvotes      = models.IntegerField(default=0)
+    created_at   = models.DateTimeField(auto_now_add=True)
+    updated_at   = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "plugins"
+        ordering = ["-installs", "-upvotes", "-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.plugin_type})"
+
+    def get_rules_list(self) -> list[str]:
+        """Return rules as a cleaned list, skipping blank lines and comments."""
+        return [
+            line.strip()
+            for line in self.rules.splitlines()
+            if line.strip() and not line.strip().startswith("#")
+        ]
+
+
+class UserPlugin(models.Model):
+    """
+    Records which plugins a user has installed, and whether each is enabled.
+    A user can install a plugin and temporarily disable it without uninstalling.
+    """
+
+    user_id   = models.CharField(max_length=255)
+    plugin    = models.ForeignKey(Plugin, on_delete=models.CASCADE, related_name="user_installs")
+    enabled   = models.BooleanField(default=True)
+    installed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "user_plugins"
+        unique_together = ("user_id", "plugin")
+
+    def __str__(self) -> str:
+        return f"{self.user_id} → {self.plugin.name}"
+
+
+class PluginUpvote(models.Model):
+    """Prevents a user from upvoting the same plugin twice."""
+
+    user_id   = models.CharField(max_length=255)
+    plugin    = models.ForeignKey(Plugin, on_delete=models.CASCADE, related_name="plugin_upvotes")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "plugin_upvotes"
+        unique_together = ("user_id", "plugin")

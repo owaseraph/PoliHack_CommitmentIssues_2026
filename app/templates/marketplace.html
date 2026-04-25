@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}PhishGuard — Marketplace{% endblock %}
+{% block nav_marketplace %}active{% endblock %}
+
+{% block extra_styles %}
+  .page-header { margin-bottom: 2rem; animation: fadeUp 0.3s ease both; }
+  .page-header h1 { font-family: var(--mono); font-size: 1.6rem; font-weight: 500; margin-bottom: 8px; }
+  .page-header h1 span { color: var(--red); }
+  .page-header p { font-size: 13px; color: var(--muted); line-height: 1.65; max-width: 560px; }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .search-input {
+    flex: 1; min-width: 180px;
+    background: var(--surface); border: 0.5px solid var(--border2);
+    border-radius: 7px; color: var(--text); font-family: var(--mono); font-size: 12px;
+    padding: 8px 12px; outline: none; transition: border-color 0.15s;
+  }
+  .search-input:focus { border-color: var(--red-mid); }
+  .filter-btn {
+    font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.06em;
+    padding: 7px 13px; border-radius: 6px; border: 0.5px solid var(--border2);
+    background: var(--surface); color: var(--muted); cursor: pointer;
+    text-decoration: none; transition: color 0.15s, border-color 0.15s, background 0.15s;
+    white-space: nowrap;
+  }
+  .filter-btn:hover, .filter-btn.selected { color: var(--text); border-color: var(--red-mid); background: var(--red-dim); }
+  .create-btn {
+    font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.06em;
+    padding: 7px 15px; border-radius: 6px; border: 0.5px solid var(--red-mid);
+    background: var(--red-dim); color: var(--red); cursor: pointer;
+    text-decoration: none; transition: background 0.15s; white-space: nowrap; margin-left: auto;
+  }
+  .create-btn:hover { background: #4d1e1e; }
+
+  /* ── Grid ── */
+  .plugin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  /* ── Plugin card ── */
+  .plugin-card {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: 12px; padding: 1.1rem 1.2rem;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: border-color 0.15s; animation: fadeUp 0.25s ease both;
+  }
+  .plugin-card:hover { border-color: var(--border2); }
+  .plugin-card.installed { border-color: var(--red-mid); background: #180e0e; }
+
+  .plugin-type-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--mono); font-size: 9px; font-weight: 500; letter-spacing: 0.1em;
+    padding: 3px 8px; border-radius: 4px; text-transform: uppercase;
+  }
+  .badge-blacklist   { background: #3d1515; color: #ff7070; border: 0.5px solid #7a2828; }
+  .badge-keyword     { background: #1e2d10; color: #7ed64e; border: 0.5px solid #3a5c1e; }
+  .badge-regex       { background: #0d1f33; color: var(--blue); border: 0.5px solid #1a3d6b; }
+  .badge-domain_list { background: var(--amber-dim); color: var(--amber); border: 0.5px solid #5c3e00; }
+
+  .plugin-name { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.4; }
+  .plugin-desc { font-size: 12px; color: var(--muted); line-height: 1.65; flex: 1; }
+  .plugin-meta {
+    font-family: var(--mono); font-size: 10px; color: var(--muted2);
+    display: flex; gap: 12px;
+  }
+  .plugin-meta span { display: flex; align-items: center; gap: 4px; }
+
+  .card-actions { display: flex; gap: 7px; align-items: center; margin-top: 2px; }
+  .install-btn {
+    flex: 1; font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.06em;
+    padding: 7px; border-radius: 6px; cursor: pointer; text-align: center;
+    border: 0.5px solid var(--border2); background: var(--surface2); color: var(--muted);
+    transition: all 0.15s;
+  }
+  .install-btn:hover { color: var(--green); border-color: #1f5c3a; background: var(--green-dim); }
+  .install-btn.installed-state { color: var(--red); border-color: var(--red-mid); background: var(--red-dim); }
+  .install-btn.installed-state:hover { background: #4d1e1e; }
+  .upvote-btn {
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    padding: 7px 11px; border-radius: 6px; cursor: pointer;
+    border: 0.5px solid var(--border2); background: var(--surface2); color: var(--muted);
+    transition: all 0.15s; display: flex; align-items: center; gap: 5px;
+  }
+  .upvote-btn:hover { color: var(--amber); border-color: #5c3e00; }
+  .upvote-btn.upvoted { color: var(--amber); border-color: #5c3e00; background: var(--amber-dim); }
+
+  .empty { text-align: center; padding: 4rem 1rem; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  .empty a { color: var(--red); text-decoration: none; }
+  .empty a:hover { text-decoration: underline; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Plugin <span>Marketplace</span></h1>
+  <p>Install community-built detection rules, blacklists, and keyword filters to customize how PhishGuard scans your inbox.</p>
+</div>
+
+<form method="get" action="{% url 'marketplace' %}">
+  <div class="toolbar">
+    <input class="search-input" type="text" name="q" placeholder="Search plugins..." value="{{ search }}">
+    <a class="filter-btn {% if not type_filter %}selected{% endif %}" href="{% url 'marketplace' %}{% if search %}?q={{ search }}{% endif %}">ALL</a>
+    {% for val, label in plugin_types %}
+      <a class="filter-btn {% if type_filter == val %}selected{% endif %}"
+         href="{% url 'marketplace' %}?type={{ val }}{% if search %}&q={{ search }}{% endif %}">
+        {{ label|upper }}
+      </a>
+    {% endfor %}
+    <a class="create-btn" href="{% url 'plugin_create' %}">+ CREATE PLUGIN</a>
+    <a class="filter-btn" href="{% url 'my_plugins' %}">MY PLUGINS</a>
+  </div>
+</form>
+
+{% if plugin_list %}
+  <div class="plugin-grid">
+    {% for item in plugin_list %}
+    {% with p=item.plugin %}
+    <div class="plugin-card {% if item.installed %}installed{% endif %}" id="card-{{ p.pk }}">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span class="plugin-type-badge badge-{{ p.plugin_type }}">
+          {% if p.plugin_type == "blacklist" %}🚫{% elif p.plugin_type == "keyword" %}🔍{% elif p.plugin_type == "regex" %}⚡{% else %}✅{% endif %}
+          {{ p.get_plugin_type_display }}
+        </span>
+        {% if item.installed %}
+          <span style="font-family:var(--mono);font-size:9px;color:var(--red);letter-spacing:0.08em;">INSTALLED</span>
+        {% endif %}
+      </div>
+
+      <div class="plugin-name">{{ p.name }}</div>
+      {% if p.description %}
+        <div class="plugin-desc">{{ p.description }}</div>
+      {% endif %}
+
+      <div class="plugin-meta">
+        <span>⬇ {{ p.installs }}</span>
+        <span>↑ {{ p.upvotes }}</span>
+        {% if p.author_email %}<span>by {{ p.author_email }}</span>{% endif %}
+      </div>
+
+      <div class="card-actions">
+        <button class="install-btn {% if item.installed %}installed-state{% endif %}"
+                onclick="toggleInstall({{ p.pk }}, this)"
+                data-installed="{{ item.installed|yesno:'true,false' }}">
+          {% if item.installed %}UNINSTALL{% else %}INSTALL{% endif %}
+        </button>
+        <button class="upvote-btn {% if item.upvoted %}upvoted{% endif %}"
+                onclick="toggleUpvote({{ p.pk }}, this)"
+                data-upvoted="{{ item.upvoted|yesno:'true,false' }}">
+          ▲ <span class="upvote-count">{{ p.upvotes }}</span>
+        </button>
+      </div>
+    </div>
+    {% endwith %}
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty">
+    No plugins found.
+    {% if search or type_filter %}
+      <br><a href="{% url 'marketplace' %}">Clear filters</a>
+    {% else %}
+      <br><a href="{% url 'plugin_create' %}">Be the first to create one →</a>
+    {% endif %}
+  </div>
+{% endif %}
+
+<script>
+const CSRF = "{{ csrf_token }}";
+
+async function toggleInstall(pluginId, btn) {
+  btn.disabled = true;
+  const r = await fetch(`/marketplace/install/${pluginId}/`, {
+    method: "POST",
+    headers: { "X-CSRFToken": CSRF }
+  });
+  const d = await r.json();
+  const card = document.getElementById(`card-${pluginId}`);
+  if (d.installed) {
+    btn.textContent = "UNINSTALL";
+    btn.classList.add("installed-state");
+    btn.dataset.installed = "true";
+    card.classList.add("installed");
+  } else {
+    btn.textContent = "INSTALL";
+    btn.classList.remove("installed-state");
+    btn.dataset.installed = "false";
+    card.classList.remove("installed");
+  }
+  btn.disabled = false;
+}
+
+async function toggleUpvote(pluginId, btn) {
+  btn.disabled = true;
+  const r = await fetch(`/marketplace/upvote/${pluginId}/`, {
+    method: "POST",
+    headers: { "X-CSRFToken": CSRF }
+  });
+  const d = await r.json();
+  btn.querySelector(".upvote-count").textContent = d.upvotes;
+  if (d.upvoted) {
+    btn.classList.add("upvoted");
+  } else {
+    btn.classList.remove("upvoted");
+  }
+  btn.dataset.upvoted = d.upvoted ? "true" : "false";
+  btn.disabled = false;
+}
+</script>
+{% endblock %}
