@@ -38,7 +38,11 @@ class LLMDetector(BaseDetector):
     @property
     def client(self):
         if self._client is None:
-            self._client = genai.Client(api_key=GEMINI_API_KEY)
+            import os
+            api_key = os.environ.get("GEMINI_API_KEY", GEMINI_API_KEY)
+            if not api_key:
+                raise ValueError("GEMINI_API_KEY is not set")
+            self._client = genai.Client(api_key=api_key)
         return self._client
 
     def analyze(self, email: EmailData, pre_signals: list[DetectionSignal] | None = None) -> DetectionSignal:
@@ -55,6 +59,7 @@ class LLMDetector(BaseDetector):
             return DetectionSignal(name=self.name, score=score, flags=flags)
 
         except Exception as e:
+            self._client = None  # reset so next request retries with fresh key
             print(f"[LLMDetector] Error: {e}")
             return DetectionSignal(name=self.name, score=0.0)
 
