@@ -66,11 +66,59 @@ def _run_detectors(email: EmailData) -> list[DetectionSignal]:
     
     return signals
 
+# app/detection/scanner.py
+
 def _aggregate(signals: list[DetectionSignal]) -> float:
     """
-    Takes the worst scores across all detectors.
+    Weighted aggregation across all detectors.
+
+    Instead of just taking max(), we combine:
+    - A weighted average (each detector contributes proportionally)
+    - A "panic" override: if ANY single detector is very confident (>= 0.9),
+      that alone can push the score high
+    - A "corroboration" bonus: if multiple detectors agree, score is boosted
+
+    This means:
+    - One detector mildly suspicious = low score (probably safe)
+    - One detector very confident    = high score (override)
+    - Multiple detectors agreeing    = boosted score (corroboration)
     """
-    return max((s.score for s in signals), default=0.0)
+
+    if not signals:
+        return 0.0
+
+    # Weights reflect how reliable each detector is
+    WEIGHTS = {
+        "header_analysis": 0.25,   # rule-based, fast, but limited signal
+        "link_analysis":   0.40,   # very reliable when it fires — Safe Browsing is authoritative
+        "llm_analysis":    0.35,   # powerful but can hallucinate
+        "trusted_sender":  0.00,   # bypass signal — handled before aggregation
+    }
+
+    weighted_sum = 0.0
+    total_weight = 0.0
+
+    for signal in signals:
+        weight = WEIGHTS.get(signal.name, 0.2)
+        weighted_sum += signal.score * weight
+        total_weight += weight
+
+    weighted_avg = weighted_sum / total_weight if total_weight > 0 else 0.0
+
+    # Panic override: one very confident detector is enough
+    max_score = max(s.score for s in signals)
+    if max_score >= 0.9:
+        # Blend: 70% from the confident detector, 30% from weighted avg
+        final = 0.7 * max_score + 0.3 * weighted_avg
+    else:
+        final = weighted_avg
+
+    # Corroboration bonus: multiple detectors firing together
+    firing = sum(1 for s in signals if s.score >= 0.5)
+    if firing >= 2:
+        final = min(final * 1.15, 1.0)  # +15% boost, capped at 1.0
+
+    return round(final, 4)
 
 
 def _is_trusted_sender(email: EmailData) -> bool:
