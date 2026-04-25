@@ -3,7 +3,6 @@
 # =============================================
 
 # API Keys and Credentials (CRITICAL - Never commit!)
-config.py
 credentials.json
 live_api_demo.py
 .env

@@ -1,0 +1,12 @@
+[build]
+# Tell Railway to use the app/ subfolder as the project root
+rootDirectory = "app"
+
+[deploy]
+startCommand = "gunicorn phishguard.wsgi --bind 0.0.0.0:$PORT --workers 2"
+healthcheckPath = "/"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+
+[[deploy.releaseCommand]]
+command = "python manage.py migrate --noinput"

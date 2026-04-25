@@ -1,6 +1,7 @@
 import os
 import json
 import base64
+import tempfile
 
 import requests as http_requests
 
@@ -18,18 +19,29 @@ from detection.scanner import scan
 
 from .models import UserToken, CommunityReport
 
-# Allow HTTP for local development only
-os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
+# Allow HTTP for local development only (never set in production)
+if os.environ.get("DEBUG", "True") == "True":
+    os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
 # Don't raise an exception if Google returns a subset of requested scopes
 os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
+
+_BASE = os.path.dirname(os.path.dirname(__file__))
+
+# Load credentials.json from GOOGLE_CREDENTIALS_JSON env var (base64-encoded)
+# when the file is not present on disk (e.g. Railway deployment).
+_CREDS_ENV = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+if _CREDS_ENV:
+    _tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
+    _tmp.write(base64.b64decode(_CREDS_ENV).decode())
+    _tmp.close()
+    CLIENT_SECRETS_FILE = _tmp.name
+else:
+    CLIENT_SECRETS_FILE = os.path.join(_BASE, "credentials.json")
 
 # Server-side fallback: stores code_verifier keyed by state.
 # Handles cases where the session cookie is lost on the OAuth round-trip
 # (e.g., remote devices, strict browser privacy settings).
 _verifier_store: dict[str, str] = {}
-
-_BASE = os.path.dirname(os.path.dirname(__file__))
-CLIENT_SECRETS_FILE = os.path.join(_BASE, "credentials.json")
 
 SCOPES = [
     "openid",
