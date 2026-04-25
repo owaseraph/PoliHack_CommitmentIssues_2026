@@ -116,8 +116,12 @@
         {{ label|upper }}
       </a>
     {% endfor %}
-    <a class="create-btn" href="{% url 'plugin_create' %}">+ CREATE PLUGIN</a>
-    <a class="filter-btn" href="{% url 'my_plugins' %}">MY PLUGINS</a>
+    {% if is_logged_in %}
+      <a class="create-btn" href="{% url 'plugin_create' %}">+ CREATE PLUGIN</a>
+      <a class="filter-btn" href="{% url 'my_plugins' %}">MY PLUGINS</a>
+    {% else %}
+      <a class="create-btn" href="{% url 'login' %}">+ CREATE PLUGIN</a>
+    {% endif %}
   </div>
 </form>
 
@@ -176,8 +180,11 @@
 
 <script>
 const CSRF = "{{ csrf_token }}";
+const IS_LOGGED_IN = {{ is_logged_in|yesno:'true,false' }};
+const LOGIN_URL = "{% url 'login' %}";
 
 async function toggleInstall(pluginId, btn) {
+  if (!IS_LOGGED_IN) { window.location.href = LOGIN_URL; return; }
   btn.disabled = true;
   const r = await fetch(`/marketplace/install/${pluginId}/`, {
     method: "POST",
@@ -200,6 +207,7 @@ async function toggleInstall(pluginId, btn) {
 }
 
 async function toggleUpvote(pluginId, btn) {
+  if (!IS_LOGGED_IN) { window.location.href = LOGIN_URL; return; }
   btn.disabled = true;
   const r = await fetch(`/marketplace/upvote/${pluginId}/`, {
     method: "POST",

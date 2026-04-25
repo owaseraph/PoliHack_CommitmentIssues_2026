@@ -459,12 +459,10 @@ def api_scan(request):
 # ── Marketplace views ─────────────────────────────────────────────────────────
 
 def marketplace(request):
-    """Browse and install community plugins."""
+    """Browse and install community plugins. Viewable without login."""
     from .models import Plugin, UserPlugin, PluginUpvote
 
     user_id = request.session.get("user_id")
-    if not user_id:
-        return redirect(reverse("login"))
 
     type_filter = request.GET.get("type", "")
     search      = request.GET.get("q", "").strip()
@@ -475,15 +473,19 @@ def marketplace(request):
     if search:
         plugins = plugins.filter(name__icontains=search) | plugins.filter(description__icontains=search)
 
-    # Annotate which plugins this user has installed
-    installed_ids = set(
-        UserPlugin.objects.filter(user_id=user_id)
-        .values_list("plugin_id", flat=True)
-    )
-    upvoted_ids = set(
-        PluginUpvote.objects.filter(user_id=user_id)
-        .values_list("plugin_id", flat=True)
-    )
+    # Annotate which plugins this user has installed (empty sets for anonymous visitors)
+    if user_id:
+        installed_ids = set(
+            UserPlugin.objects.filter(user_id=user_id)
+            .values_list("plugin_id", flat=True)
+        )
+        upvoted_ids = set(
+            PluginUpvote.objects.filter(user_id=user_id)
+            .values_list("plugin_id", flat=True)
+        )
+    else:
+        installed_ids = set()
+        upvoted_ids   = set()
 
     plugin_list = []
     for p in plugins:
@@ -498,6 +500,7 @@ def marketplace(request):
         "type_filter":   type_filter,
         "search":        search,
         "plugin_types":  Plugin.PLUGIN_TYPES,
+        "is_logged_in":  bool(user_id),
         "user_name":     request.session.get("user_name", ""),
         "user_email":    request.session.get("user_email", ""),
     })
