@@ -4,6 +4,7 @@ from services.llm_service import analyze_text
 from services.scoring import get_description, compute_trust_score
 from models.db import init_db
 import time
+import os
 
 app = Flask(__name__)
 
