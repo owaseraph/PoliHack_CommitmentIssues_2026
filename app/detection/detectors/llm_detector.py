@@ -1,3 +1,5 @@
+# app/detection/detectors/llm_detector.py
+
 import json
 from google import genai
 from google.genai import types
@@ -8,13 +10,16 @@ from config import GEMINI_API_KEY
 SYSTEM_PROMPT = """
 You are a cybersecurity expert specializing in phishing email detection.
 
-Important rules:
-- Notification emails with empty bodies are NORMAL — do not flag them as suspicious
-- Emails from known platforms (GitHub, Google, Microsoft) with empty bodies are routine
-- Only flag emails with actual phishing signals: urgency, credential requests, spoofed domains, suspicious links
-- An empty email alone is NOT sufficient reason to flag as suspicious
+You will receive an email along with pre-computed signals from other detectors.
+Use ALL available information — email content AND detector signals — to make your assessment.
 
-Return ONLY a valid JSON object:
+Rules:
+- Empty bodies on notification emails (GitHub, Google, etc.) are NORMAL
+- Weight pre-computed signals heavily — they are from trusted rule-based systems
+- Only flag actual phishing signals: urgency, credential requests, spoofed domains, manipulation
+- If pre-computed signals show SPF/DKIM/DMARC failures, treat that as strong evidence
+
+Return ONLY valid JSON:
 {
   "score": <float 0.0-1.0>,
   "verdict": "phishing" | "suspicious" | "safe",
@@ -22,51 +27,59 @@ Return ONLY a valid JSON object:
 }
 """.strip()
 
-class LLMDetector(BaseDetector):
-    """
-    Uses Gemini to analyze email content for phishing signals:
-    urgency, impersonation, suspicion requests, manipulative language, etc.
-    """
 
-    name="llm_analysis"
+class LLMDetector(BaseDetector):
+
+    name = "llm_analysis"
 
     def __init__(self):
         self.client = genai.Client(api_key=GEMINI_API_KEY)
 
-    def analyze(self, email: EmailData) -> DetectionSignal:
+    def analyze(self, email: EmailData, pre_signals: list[DetectionSignal] | None = None) -> DetectionSignal:
         try:
-            raw = self._call_llm(email)
+            raw    = self._call_llm(email, pre_signals or [])
             result = json.loads(raw)
 
-            score = float(result.get("score", 0.0))
+            score   = float(result.get("score", 0.0))
             verdict = result.get("verdict", "safe")
             reasons = result.get("reasons", [])
 
-            flags = [f"llm:{r}" for r in reasons]
-            flags.insert(0,f"llm_verdict:{verdict}")
+            flags = [f"llm_verdict:{verdict}"] + [f"llm:{r}" for r in reasons]
 
             return DetectionSignal(name=self.name, score=score, flags=flags)
+
         except Exception as e:
-            print(f"[LLM Detector] Error: {e}")
+            print(f"[LLMDetector] Error: {e}")
             return DetectionSignal(name=self.name, score=0.0)
 
-    # Helpers
-    def _call_llm(self, email:EmailData) -> str:
+    def _call_llm(self, email: EmailData, pre_signals: list[DetectionSignal]) -> str:
+
+        # Summarise what other detectors already found
+        signal_summary = ""
+        if pre_signals:
+            lines = []
+            for s in pre_signals:
+                if s.flags:
+                    lines.append(f"- {s.name} (score={s.score:.2f}): {', '.join(s.flags)}")
+            if lines:
+                signal_summary = "Pre-computed detector signals:\n" + "\n".join(lines) + "\n\n"
+
         prompt = (
-            f"Subject: {email.subject}\n"
-            f"From: {email.from_}\n"
-            f"Reply-to: {email.reply_to}\n"
-            f"Links: {email.links}\n\n"
-            f"Body:\n {email.body_text[:2000]}"
+            f"{signal_summary}"
+            f"Subject:  {email.subject}\n"
+            f"From:     {email.from_}\n"
+            f"Reply-To: {email.reply_to}\n"
+            f"Links:    {email.links}\n\n"
+            f"Body:\n{email.body_text[:2000]}"
         )
-        # Low temperature for more deterministic/analytical results
+
         response = self.client.models.generate_content(
-            model="gemini-2.5-flash", 
+            model="gemini-2.5-flash",
             contents=prompt,
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
                 response_mime_type="application/json",
-                temperature=0.1, 
+                temperature=0.1,
             )
         )
 
