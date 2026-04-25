@@ -62,11 +62,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "phishguard.wsgi.application"
 
+import dj_database_url
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "phishguard.db",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'phishguard.db'}",
+        conn_max_age=600,
+    )
 }
 
 # DB-backed sessions survive across multiple gunicorn workers.
