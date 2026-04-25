@@ -18,7 +18,8 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Set this to your public URL in Railway env vars (no trailing slash)
 # e.g. SITE_URL=https://phishguard.up.railway.app
-SITE_URL = os.environ.get("SITE_URL", "")
+_railway_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
+SITE_URL = os.environ.get("SITE_URL", "") or (f"https://{_railway_domain}" if _railway_domain else "")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
