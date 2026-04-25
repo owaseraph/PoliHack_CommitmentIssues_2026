@@ -188,10 +188,10 @@
 <div class="shell">
 
   <div class="topbar">
-    <div class="logo">
+    <a href="{% url 'home' %}" class="logo" style="text-decoration:none;">
       <div class="logo-icon">🛡</div>
       <div class="logo-name">Phish<span>Guard</span></div>
-    </div>
+    </a>
     <div class="topbar-right">
       {% if user_email %}<span class="user-info">{{ user_email }}</span>{% endif %}
       <a href="{% url 'logout' %}" class="logout-btn">LOGOUT</a>
