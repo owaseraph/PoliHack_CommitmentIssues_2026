@@ -23,8 +23,10 @@ os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
 # Don't raise an exception if Google returns a subset of requested scopes
 os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
 
-# Fallback store in case the session is lost between login and callback
-_code_verifiers: dict[str, str] = {}
+# Server-side fallback: stores code_verifier keyed by state.
+# Handles cases where the session cookie is lost on the OAuth round-trip
+# (e.g., remote devices, strict browser privacy settings).
+_verifier_store: dict[str, str] = {}
 
 _BASE = os.path.dirname(os.path.dirname(__file__))
 CLIENT_SECRETS_FILE = os.path.join(_BASE, "credentials.json")
@@ -179,17 +181,15 @@ def login_view(request):
     )
     request.session["oauth_state"] = state
     request.session["code_verifier"] = flow.code_verifier
-    request.session.save()  # ensure session is persisted before redirect
-    _code_verifiers[state] = flow.code_verifier  # fallback in case session is lost
+    request.session.save()
+    _verifier_store[state] = flow.code_verifier  # fallback if session lost on redirect
     return redirect(authorization_url)
 
 
 def oauth2callback(request):
     state = request.GET.get("state") or request.session.get("oauth_state")
-    code_verifier = request.session.get("code_verifier") or _code_verifiers.pop(state, None)
-
-    if not code_verifier:
-        return HttpResponseBadRequest("Missing code verifier — please retry login.")
+    # Try session first; fall back to server-side store if session was lost
+    code_verifier = request.session.get("code_verifier") or _verifier_store.pop(state, None)
 
     flow = Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE,
@@ -197,7 +197,8 @@ def oauth2callback(request):
         state=state,
         redirect_uri=_get_redirect_uri(request),
     )
-    flow.code_verifier = code_verifier
+    if code_verifier:
+        flow.code_verifier = code_verifier
 
     # Build the full callback URL as Django sees it
     callback_url = request.build_absolute_uri()
@@ -235,7 +236,10 @@ def dashboard(request):
 
     user_id = request.session["user_id"]
     creds = UserToken.load_credentials(user_id)
-    if not creds:
+    gmail_scope = "https://www.googleapis.com/auth/gmail.readonly"
+    if not creds or not creds.scopes or gmail_scope not in creds.scopes:
+        UserToken.delete_credentials(user_id)
+        request.session.flush()
         return redirect(reverse("login"))
 
     service = build("gmail", "v1", credentials=creds)
