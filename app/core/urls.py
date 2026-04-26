@@ -10,9 +10,7 @@ urlpatterns = [
     path("community/", views.community, name="community"),
     path("community/upvote/<int:report_id>/", views.upvote_report, name="upvote_report"),
     path("download/", views.download, name="download"),
-    path("check-email/", views.check_email, name="check_email"),
     path("api/scan/", views.api_scan, name="api_scan"),
-    
     # Marketplace
     path("marketplace/", views.marketplace, name="marketplace"),
     path("marketplace/install/<int:plugin_id>/", views.marketplace_install, name="marketplace_install"),

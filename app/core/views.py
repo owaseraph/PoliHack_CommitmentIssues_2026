@@ -450,20 +450,11 @@ def download(request):
     })
 
 
-def check_email(request):
-    """Standalone email checker page for non-logged-in users."""
-    return render(request, "check_email.html", {
-        "is_logged_in": bool(request.session.get("user_id")),
-        "user_name":    request.session.get("user_name", ""),
-    })
-
-
 @csrf_exempt
 def api_scan(request):
     """
     JSON endpoint for external callers (future browser extension, etc).
     Protected by a static API key — set EXTENSION_API_KEY in Railway env vars.
-    Also accepts 'public-demo-key' for the check_email page.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -471,9 +462,7 @@ def api_scan(request):
     # ✅ Require API key so this endpoint can't be abused to drain Gemini quota
     expected_key = os.environ.get("EXTENSION_API_KEY", "")
     provided_key = request.headers.get("X-API-Key", "")
-    
-    # Allow public demo key for check_email page, or real API key for extensions
-    if provided_key != "public-demo-key" and (not expected_key or provided_key != expected_key):
+    if not expected_key or provided_key != expected_key:
         return JsonResponse({"error": "Unauthorized"}, status=401)
 
     try:
