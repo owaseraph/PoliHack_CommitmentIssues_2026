@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    /* ── Reset & Theme ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg0:     #080d1a;
+      --bg1:     #0d1526;
+      --bg2:     #111d33;
+      --border:  #1a2847;
+      --text:    #e2e8f0;
+      --muted:   #64748b;
+      --dim:     #334155;
+      --blue:    #3b82f6;
+      --green:   #22c55e;
+      --amber:   #f59e0b;
+      --red:     #ef4444;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --font-sans: system-ui, -apple-system, sans-serif;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg0:    #f0f4ff;
+        --bg1:    #ffffff;
+        --bg2:    #f8faff;
+        --border: #dde5f7;
+        --text:   #1e293b;
+        --muted:  #64748b;
+        --dim:    #94a3b8;
+        --blue:   #2563eb;
+        --green:  #16a34a;
+        --amber:  #d97706;
+        --red:    #dc2626;
+      }
+    }
+
+    html { color-scheme: dark light; }
+
+    body {
+      font-family: var(--font-sans);
+      width: 256px;
+      background: var(--bg0);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    .header {
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .shield-icon { flex-shrink: 0; }
+    .logo-text {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+    .logo-text em { color: var(--blue); font-style: normal; }
+    .header-status {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .header-status.premium { color: var(--blue); border-color: color-mix(in srgb, var(--blue) 30%, transparent); }
+
+    /* ── Score section ──────────────────────────────────── */
+    .score-section {
+      padding: 16px 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .score-ring { flex-shrink: 0; }
+    .score-info {}
+    .score-num {
+      font-family: var(--font-mono);
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+      transition: color 0.3s;
+    }
+    .score-verdict {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-top: 2px;
+      transition: color 0.3s;
+    }
+    .score-url {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;
+    }
+
+    /* ── Description ────────────────────────────────────── */
+    .desc-section {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .desc-text {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .threat-chip {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: color-mix(in srgb, var(--red) 12%, transparent);
+      color: var(--red);
+      border: 1px solid color-mix(in srgb, var(--red) 30%, transparent);
+    }
+
+    /* ── Diagnostics ────────────────────────────────────── */
+    .diag-section {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 10px;
+    }
+    .diag-item {
+      font-size: 10px;
+      color: var(--dim);
+    }
+    .diag-item span {
+      color: var(--muted);
+      font-family: var(--font-mono);
+    }
+
+    /* ── Plan toggle ────────────────────────────────────── */
+    .plan-section {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 7px;
+    }
+    .plan-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+    .plan-btn {
+      padding: 6px 8px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.03em;
+    }
+    .plan-btn:hover { background: var(--bg1); color: var(--text); }
+    .plan-btn.active-free {
+      background: var(--bg1);
+      border-color: color-mix(in srgb, var(--muted) 40%, transparent);
+      color: var(--text);
+    }
+    .plan-btn.active-premium {
+      background: color-mix(in srgb, var(--blue) 12%, transparent);
+      border-color: color-mix(in srgb, var(--blue) 40%, transparent);
+      color: var(--blue);
+    }
+
+    /* ── Footer actions ─────────────────────────────────── */
+    .footer {
+      padding: 9px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rescan-btn {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--blue);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      padding: 0;
+      letter-spacing: 0.04em;
+      transition: color 0.15s;
+    }
+    .rescan-btn:hover { color: color-mix(in srgb, var(--blue) 70%, white); }
+    .rescan-btn:disabled { opacity: 0.4; cursor: default; }
+
+    .ask-btn {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+      padding: 4px 9px;
+      letter-spacing: 0.04em;
+      transition: all 0.15s;
+      display: none;
+    }
+    .ask-btn.visible {
+      display: block;
+      color: var(--blue);
+      border-color: color-mix(in srgb, var(--blue) 30%, transparent);
+    }
+    .ask-btn:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--blue) 10%, transparent);
+    }
+    .ask-btn:disabled { opacity: 0.4; cursor: default; }
+
+    /* ── State modifiers ─────────────────────────────────── */
+    .c-safe   { color: var(--green) !important; }
+    .c-warn   { color: var(--amber) !important; }
+    .c-danger { color: var(--red)   !important; }
+    .c-unknown{ color: var(--muted) !important; }
+
+    /* ── Animated spinner ─────────────────────────────────── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { display: inline-block; animation: spin 1s linear infinite; }
+
+    /* ── Shimmer on scan ─────────────────────────────────── */
+    @keyframes shimmer {
+      0%   { opacity: 0.5; }
+      50%  { opacity: 1; }
+      100% { opacity: 0.5; }
+    }
+    .scanning { animation: shimmer 1.2s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <svg class="shield-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.35C16.5 22.15 20 17.25 20 12V6L12 2z"
+          fill="color-mix(in srgb, #3b82f6 20%, transparent)"
+          stroke="#3b82f6" stroke-width="1.5"/>
+    <polyline points="9,12 11,14 15,10" stroke="#3b82f6" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div class="logo-text">Phish<em>Guard</em></div>
+  <div class="header-status" id="plan-chip">FREE</div>
+</div>
+
+<!-- Score -->
+<div class="score-section">
+  <svg class="score-ring" id="score-ring" width="60" height="60" viewBox="0 0 60 60">
+    <circle cx="30" cy="30" r="24" fill="none" stroke="var(--border)" stroke-width="5"/>
+    <circle id="ring-arc" cx="30" cy="30" r="24" fill="none" stroke="var(--muted)" stroke-width="5"
+      stroke-dasharray="0 150.8" stroke-linecap="round"
+      transform="rotate(-90 30 30)"
+      style="transition: stroke-dasharray 0.6s cubic-bezier(.4,0,.2,1), stroke 0.3s"/>
+    <text id="ring-num" x="30" y="35" text-anchor="middle"
+      font-size="13" fill="var(--muted)"
+      font-family="SF Mono,Fira Code,monospace" font-weight="700">—</text>
+  </svg>
+  <div class="score-info">
+    <div class="score-num c-unknown" id="score-num">—</div>
+    <div class="score-verdict c-unknown" id="score-verdict">No scan yet</div>
+    <div class="score-url" id="score-url">—</div>
+  </div>
+</div>
+
+<!-- Description -->
+<div class="desc-section">
+  <div class="desc-text" id="desc-text">Open any page and PhishGuard will scan it automatically.</div>
+  <div id="threat-chip" style="display:none" class="threat-chip"></div>
+</div>
+
+<!-- Diagnostics -->
+<div class="diag-section">
+  <div class="diag-item">links: <span id="d-links">—</span></div>
+  <div class="diag-item">mode: <span id="d-mode">—</span></div>
+  <div class="diag-item">source: <span id="d-source">—</span></div>
+  <div class="diag-item">scan: <span id="d-ts">—</span></div>
+</div>
+
+<!-- Plan toggle -->
+<div class="plan-section">
+  <div class="section-label">Analysis Mode</div>
+  <div class="plan-toggle">
+    <button class="plan-btn" id="btn-free">Free</button>
+    <button class="plan-btn" id="btn-premium">⚡ Premium</button>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <button class="rescan-btn" id="rescan-btn">↺ Rescan</button>
+  <button class="ask-btn" id="ask-btn">⚡ Ask AI</button>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>

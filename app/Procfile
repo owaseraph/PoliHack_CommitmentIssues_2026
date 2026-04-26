@@ -1,0 +1,2 @@
+release: python manage.py collectstatic --noinput && python manage.py migrate --noinput && python manage.py ensure_superuser && python manage.py seed_marketplace
+web: gunicorn phishguard.wsgi --bind 0.0.0.0:$PORT --workers 2
