@@ -42,7 +42,7 @@ def check_link_reputation(url):
     if result:
         return result[0], True
 
-    return 70, False
+    return 75, False
 
 
 def analyze_links(links):
