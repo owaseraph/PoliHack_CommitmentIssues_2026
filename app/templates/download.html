@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load static %}
 {% block title %}PhishGuard — Download Extension{% endblock %}
 {% block nav_download %}active{% endblock %}
 
@@ -158,7 +157,6 @@
         <span class="ext-badge">MV3</span>
       </div>
       <a href="#" class="ext-btn eb-chrome">DOWNLOAD FOR CHROME</a>
-      <!--a href="{% static 'extension/phishguard-extension.zip' %}" download class="ext-btn eb-chrome" onclick="showInstallSteps()">DOWNLOAD FOR CHROME</a-->
     </div>
 
     <div class="ext-card">
@@ -215,7 +213,7 @@
     </div>
     <div class="faq-item">
       <div class="faq-q">Does it work without the web dashboard?</div>
-      <div class="faq-a">The extension connects to the PhishGuard backend at <code>phishguard.up.railway.app</code>. You need a PhishGuard account for real-time scanning to work.</div>
+      <div class="faq-a">The extension connects to the PhishGuard backend at <code>https://polihackcommitmentissues2026-production.up.railway.app</code>. You need a PhishGuard account for real-time scanning to work.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Can I scan a specific email, not just the latest ones?</div>
