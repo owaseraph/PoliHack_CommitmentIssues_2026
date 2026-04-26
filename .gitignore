@@ -1,2 +1,5 @@
-server/
-files.zip
+# Root-level gitignore
+*.db
+__pycache__/
+*.py[cod]
+.env

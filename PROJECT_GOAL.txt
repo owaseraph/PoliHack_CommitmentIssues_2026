@@ -1,0 +1,68 @@
+PROJECT GOAL — PhishGuard
+Team: Commitment Issues | PoliHack V18 (2026)
+=================================================
+
+WHAT IT DOES
+------------
+PhishGuard is a web application that automatically scans a user's Gmail inbox
+for phishing and suspicious emails, then presents a ranked report on a
+personal dashboard. Users can also report phishing emails to a shared
+community feed that other users can view and upvote.
+
+HOW IT WORKS
+------------
+1. AUTHENTICATION
+   The user signs in with their Google account via OAuth 2.0 (PKCE flow).
+   This grants PhishGuard read-only access to their Gmail inbox.
+   OAuth tokens are stored per-user in the database and auto-refreshed.
+
+2. EMAIL FETCHING
+   The app fetches the user's recent emails via the Gmail API and parses
+   each one into a structured object (subject, sender, reply-to, body,
+   headers, embedded links).
+
+3. MULTI-LAYER DETECTION PIPELINE
+   Each email is passed through three independent detectors:
+
+   a) Header Detector — Rule-based analysis of email headers:
+      - SPF / DKIM / DMARC authentication failures
+      - Reply-To domain mismatches
+      - Display name spoofing (e.g. "PayPal <evil@attacker.com>")
+      - Lookalike / homoglyph domains impersonating known brands
+
+   b) Link Detector — Analysis of all URLs in the email:
+      - Google Safe Browsing API check for known malicious URLs
+      - Suspicious TLD detection (.xyz, .tk, .gq, etc.)
+      - URL shortener detection (hides real destination)
+      - Excessive link count heuristic
+
+   c) LLM Detector — Gemini AI (Google Generative AI) analysis:
+      - Receives the full email content plus the signals from steps (a) and (b)
+      - Returns a phishing score (0.0–1.0), a verdict (safe/suspicious/phishing),
+        and a list of human-readable reasons
+      - Acts as the final arbitration layer, weighting the rule-based signals
+
+4. SCORING & VERDICT
+   The three detector scores are combined into a single risk score.
+   Each email is classified as: safe, suspicious, or phishing.
+
+5. DASHBOARD
+   The user sees a summary of their inbox scan:
+   - Counts of phishing, suspicious, and safe emails
+   - Per-email cards with verdict, score, and explanation flags
+
+6. COMMUNITY REPORTS
+   Users can submit phishing emails they discover to a public community board.
+   Other users can upvote reports to surface the most dangerous active threats.
+   Duplicate submissions within a 10-minute window are rejected automatically.
+
+TECH STACK
+----------
+- Backend:   Django 6 (Python 3.13)
+- Auth:      Google OAuth 2.0 via google-auth-oauthlib
+- Gmail:     Google Gmail API (read-only)
+- AI:        Google Gemini (google-genai) for LLM-based detection
+- Safety:    Google Safe Browsing API v4 for URL threat checks
+- Database:  SQLite (sessions + OAuth tokens + community reports)
+- Hosting:   Railway (production), ngrok (local dev tunnel)
+- Frontend:  Plain HTML/CSS served by Django templates + Whitenoise
