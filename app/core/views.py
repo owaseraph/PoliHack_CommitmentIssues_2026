@@ -128,9 +128,10 @@ def _enrich_email(email_entry: dict) -> dict:
     pct         = round(score * 100)
     is_phishing = email_entry.get("is_phishing", False)
 
-    if is_phishing:
+    # Three-tier verdict system: phishing (high confidence) / suspicious (medium) / safe (low risk)
+    if is_phishing or score > 0.7:
         verdict, label, bar_color = "phishing",   "PHISHING",   "#ff4d4d"
-    elif score > 0.5:
+    elif score > 0.4:
         verdict, label, bar_color = "suspicious", "SUSPICIOUS", "#f0a500"
     else:
         verdict, label, bar_color = "safe",       "SAFE",       "#3dd68c"
