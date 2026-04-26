@@ -13,6 +13,7 @@ _last_llm_time   = 0
 _last_llm_desc   = ""
 _last_llm_score  = 50
 _last_llm_threat = "none"
+_last_llm_url    = ""   # bust cache when URL changes (new tab / navigation)
 LLM_COOLDOWN     = 30
 
 
@@ -26,13 +27,17 @@ def build_response(trust_score, description, threat_type="none", source="db", wo
     }
 
 
-def run_llm(text, links, force=False):
-    global _last_llm_time, _last_llm_desc, _last_llm_score, _last_llm_threat
+def run_llm(text, links, url="", force=False):
+    global _last_llm_time, _last_llm_desc, _last_llm_score, _last_llm_threat, _last_llm_url
     now = time.time()
-    if force or now - _last_llm_time >= LLM_COOLDOWN:
+    url_changed = url and url != _last_llm_url
+    if force or url_changed or now - _last_llm_time >= LLM_COOLDOWN:
+        if url_changed:
+            print(f"[LLM] URL changed → busting cache ({_last_llm_url!r} → {url!r})")
         print("[LLM] Calling Gemini…")
         desc, score, threat = analyze_text(text, links)
         _last_llm_time, _last_llm_desc, _last_llm_score, _last_llm_threat = now, desc, score, threat
+        _last_llm_url = url
         return desc, score, threat, "llm"
     print("[LLM] Cooldown — cached")
     return _last_llm_desc, _last_llm_score, _last_llm_threat, "llm-cached"
@@ -41,17 +46,16 @@ def run_llm(text, links, force=False):
 
 def merge_scores(db_score, llm_score, llm_desc, llm_threat, worst_link, worst_score):
     # If either source is alarmed (<70): take minimum — something is wrong.
-    # If both are calm (>=70): take maximum — DB unknown default (70) should not
-    # drag down a site the LLM correctly identifies as safe (e.g. proton.me).
+    # If both calm (>=70): take maximum — DB unknown-70 default must not drag down safe sites.
     if db_score < 70 or llm_score < 70:
         final_score = min(db_score, llm_score)
     else:
         final_score = max(db_score, llm_score)
 
-    # Description comes from whichever source is more alarmed
-    if llm_score <= db_score:
-        return final_score, llm_desc, llm_threat
-    return final_score, get_description(worst_link, worst_score), "none"
+    # Always use LLM description — it has full page context and is more informative.
+    # DB description is a generic template; LLM actually explains what it found.
+    threat = llm_threat if llm_score <= db_score else "none"
+    return final_score, llm_desc, threat
 
 
 @app.route("/health", methods=["GET"])
@@ -81,7 +85,7 @@ def analyze():
     # LLM scores the page content independently.
     # Final score = min(db_score, llm_score) so either can flag the page.
     print("[PREMIUM/LLM] Triggering Gemini…")
-    llm_desc, llm_score, llm_threat, source = run_llm(text, cleaned_links)
+    llm_desc, llm_score, llm_threat, source = run_llm(text, cleaned_links, url=data.get('url', ''))
     final_score, desc, threat = merge_scores(db_score, llm_score, llm_desc, llm_threat, worst_link, worst_score)
 
     print(f"[PREMIUM] db={db_score}  llm={llm_score}  final={final_score}  threat={threat}")
@@ -103,7 +107,7 @@ def ask():
     worst_score, cleaned_links, worst_link, _ = analyze_links(links)
     db_score = compute_trust_score(worst_score)
 
-    llm_desc, llm_score, llm_threat, _ = run_llm(text, cleaned_links, force=True)
+    llm_desc, llm_score, llm_threat, _ = run_llm(text, cleaned_links, url=data.get('url', ''), force=True)
     final_score, desc, threat = merge_scores(db_score, llm_score, llm_desc, llm_threat, worst_link, worst_score)
 
     return jsonify(build_response(final_score, desc, threat, source="llm", worst_link=worst_link))
