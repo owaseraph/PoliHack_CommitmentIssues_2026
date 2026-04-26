@@ -4,25 +4,28 @@ from services.llm_service import analyze_text
 from services.scoring import get_description, compute_trust_score
 from models.db import init_db
 import time
-import os
 
 app = Flask(__name__)
 
-VERDICT_URL = "https://polihackcommitmentissues2026-production.up.railway.app/"
+VERDICT_URL  = "https://polihackcommitmentissues2026-production-019d.up.railway.app"
 
+# ── Global LLM cooldown (server-side safety net, 30 s) ───────────────────
 _last_llm_time   = 0
 _last_llm_desc   = ""
 _last_llm_score  = 50
 _last_llm_threat = "none"
-LLM_COOLDOWN     = 5
+LLM_COOLDOWN     = 30      # seconds — generous, client enforces too
 
 
-def build_response(trust_score, description, threat_type="none"):
+def build_response(trust_score, description, threat_type="none",
+                   source="db", worst_link=None):
     return {
-        "trust_score": trust_score,
-        "description": description,
-        "threat_type": threat_type,
-        "verdict_url": VERDICT_URL,
+        "trust_score" : trust_score,
+        "description" : description,
+        "threat_type" : threat_type,
+        "verdict_url" : VERDICT_URL,
+        "source"      : source,          # "db" | "llm" | "llm-cached"
+        "worst_link"  : worst_link,      # for extension diagnostics
     }
 
 
@@ -36,10 +39,10 @@ def run_llm(text, links, force=False):
         _last_llm_desc   = desc
         _last_llm_score  = score
         _last_llm_threat = threat
+        return desc, score, threat, "llm"
     else:
-        print("[LLM] Cooldown — returning cached")
-        desc, score, threat = _last_llm_desc, _last_llm_score, _last_llm_threat
-    return desc, score, threat
+        print("[LLM] Cooldown — returning cached result")
+        return _last_llm_desc, _last_llm_score, _last_llm_threat, "llm-cached"
 
 
 @app.route("/health", methods=["GET"])
@@ -57,32 +60,32 @@ def analyze():
     print(f"\n[REQUEST] user={user_id}  links={len(links)}")
     worst_score, cleaned_links, worst_link, all_known = analyze_links(links)
 
-    # Free tier — DB only, no LLM ever
+    # ── Free tier: DB only, never LLM ────────────────────────────────────
     if user_id != "premium_user":
         score = compute_trust_score(worst_score)
         desc  = get_description(worst_link, worst_score)
         print(f"[FREE] score={score}  worst={worst_link}")
-        return jsonify(build_response(score, desc))
+        return jsonify(build_response(score, desc, source="db", worst_link=worst_link))
 
-    # Premium: all links in DB → return DB score immediately
+    # ── Premium: all links known in DB → return immediately ──────────────
     if cleaned_links and all_known:
         score = compute_trust_score(worst_score)
         desc  = get_description(worst_link, worst_score)
         print(f"[PREMIUM/DB] score={score}  worst={worst_link}")
-        return jsonify(build_response(score, desc))
+        return jsonify(build_response(score, desc, source="db", worst_link=worst_link))
 
-    # Premium: at least one unknown link, or no links at all → LLM
+    # ── Premium: unknown link(s) or no links → LLM ───────────────────────
     print("[PREMIUM/LLM] Triggering Gemini…")
-    desc, score, threat = run_llm(text, cleaned_links)
-    print(f"[PREMIUM/LLM] score={score}  threat={threat}")
-    return jsonify(build_response(score, desc, threat))
+    desc, score, threat, source = run_llm(text, cleaned_links)
+    print(f"[PREMIUM/LLM] score={score}  threat={threat}  source={source}")
+    return jsonify(build_response(score, desc, threat, source=source, worst_link=worst_link))
 
 
 @app.route("/ask", methods=["POST"])
 def ask():
     """
-    Premium-only. Called when user clicks 'Ask AI' in the extension panel.
-    Always forces a fresh LLM call — bypasses cooldown and DB cache.
+    Premium-only forced LLM call (Ask AI button).
+    Always bypasses cooldown — used sparingly by the client.
     """
     data    = request.json or {}
     user_id = data.get("user_id", "free_user")
@@ -93,13 +96,11 @@ def ask():
         return jsonify({"error": "premium only", "description": None, "trust_score": None}), 403
 
     print(f"\n[ASK_AI] Forced Gemini for user={user_id}  links={len(links)}")
-    _, cleaned_links, _, _ = analyze_links(links)
-    desc, score, threat = run_llm(text, cleaned_links, force=True)
-    return jsonify(build_response(score, desc, threat))
+    _, cleaned_links, worst_link, _ = analyze_links(links)
+    desc, score, threat, _ = run_llm(text, cleaned_links, force=True)
+    return jsonify(build_response(score, desc, threat, source="llm", worst_link=worst_link))
 
 
 if __name__ == "__main__":
     init_db()
-    print("init db")
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)
