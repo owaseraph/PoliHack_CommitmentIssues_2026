@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify
 from services.link_analyzer import analyze_links
 from services.llm_service import analyze_text
@@ -102,5 +103,7 @@ def ask():
 
 
 if __name__ == "__main__":
+    print("init db")
     init_db()
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
