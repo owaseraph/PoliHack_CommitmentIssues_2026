@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% block title %}PhishGuard — Download Extension{% endblock %}
+{% block nav_download %}active{% endblock %}
+
+{% block extra_styles %}
+  .page-header { margin-bottom: 3rem; text-align: center; animation: fadeUp 0.3s ease both; }
+  .page-header h1 { font-family: var(--mono); font-size: 1.6rem; font-weight: 500; margin-bottom: 10px; }
+  .page-header h1 span { color: var(--red); }
+  .page-header p { font-size: 14px; color: var(--muted); line-height: 1.7; max-width: 520px; margin: 0 auto; }
+
+  .section-label {
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 14px; text-align: center;
+  }
+  .section { margin-bottom: 4rem; }
+
+  /* ── Extension cards ── */
+  .ext-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px; animation: fadeUp 0.3s 0.05s ease both;
+  }
+  .ext-card {
+    background: var(--surface); border: 0.5px solid var(--border); border-radius: 14px;
+    padding: 1.75rem; display: flex; flex-direction: column; gap: 14px;
+    transition: border-color 0.15s;
+  }
+  .ext-card:hover { border-color: var(--border2); }
+  .ext-card-head { display: flex; align-items: center; gap: 12px; }
+  .ext-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    flex-shrink: 0;
+  }
+  .ei-chrome  { background: #1a1f12; border: 0.5px solid #3a4520; }
+  .ei-firefox { background: #1a100d; border: 0.5px solid #4d2a1a; }
+  .ext-browser { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--text); }
+  .ext-version { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+  .ext-desc { font-size: 12px; color: var(--muted); line-height: 1.65; flex: 1; }
+  .ext-badges { display: flex; flex-wrap: wrap; gap: 5px; }
+  .ext-badge {
+    font-family: var(--mono); font-size: 10px; padding: 3px 8px;
+    border-radius: 5px; border: 0.5px solid var(--border2);
+    color: var(--muted); background: var(--surface2);
+  }
+  .ext-btn {
+    display: block; text-align: center;
+    font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.07em;
+    padding: 10px 20px; border-radius: 7px; text-decoration: none;
+    transition: background 0.15s;
+  }
+
+  /* ── green-mid fallback in case not defined in base ── */
+  :root { --green-mid: #1a5c3a; --amber-mid: #6b4500; }
+
+  .eb-chrome        { background: var(--green-dim); color: var(--green); border: 0.5px solid var(--green-mid); }
+  .eb-chrome:hover  { background: #153d28; }
+  .eb-firefox       { background: var(--amber-dim); color: var(--amber); border: 0.5px solid var(--amber-mid); }
+  .eb-firefox:hover { background: #4d3500; }
+  .eb-coming        { background: var(--surface2); color: var(--muted); border: 0.5px solid var(--border2); cursor: default; }
+
+  /* ── Notice banner ── */
+  .dev-notice {
+    background: var(--amber-dim); border: 0.5px solid var(--amber-mid);
+    border-radius: 10px; padding: 10px 16px; margin-top: -8px; margin-bottom: 20px;
+    font-family: var(--mono); font-size: 11px; color: var(--amber); line-height: 1.6;
+    text-align: center;
+  }
+
+  /* ── Install steps ── */
+  .install-steps {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px; animation: fadeUp 0.3s 0.1s ease both;
+  }
+  .install-step {
+    background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px;
+    padding: 1.25rem;
+  }
+  .step-num {
+    font-family: var(--mono); font-size: 10px; color: var(--muted);
+    letter-spacing: 0.1em; margin-bottom: 8px;
+  }
+  .step-text { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .step-text strong { color: var(--text); }
+
+  /* ── FAQ ── */
+  .faq-list { animation: fadeUp 0.3s 0.15s ease both; }
+  .faq-item {
+    background: var(--surface); border: 0.5px solid var(--border); border-radius: 10px;
+    padding: 1rem 1.25rem; margin-bottom: 8px;
+    transition: border-color 0.15s;
+  }
+  .faq-item:hover { border-color: var(--border2); }
+  .faq-q { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+  .faq-a { font-size: 12px; color: var(--muted); line-height: 1.65; }
+  .faq-a code {
+    font-family: var(--mono); font-size: 11px;
+    background: var(--surface2); border: 0.5px solid var(--border2);
+    padding: 1px 6px; border-radius: 4px; color: var(--green);
+  }
+
+  /* ── CTA strip ── */
+  .cta-strip {
+    background: var(--surface); border: 0.5px solid var(--red-mid);
+    border-radius: 14px; padding: 2rem; text-align: center;
+    box-shadow: 0 0 40px rgba(255,77,77,0.06);
+    animation: fadeUp 0.3s 0.2s ease both;
+  }
+  .cta-strip h2 { font-family: var(--mono); font-size: 1.1rem; font-weight: 500; margin-bottom: 8px; }
+  .cta-strip h2 span { color: var(--red); }
+  .cta-strip p { font-size: 12px; color: var(--muted); margin-bottom: 1.25rem; line-height: 1.6; }
+  .btn-primary {
+    display: inline-block;
+    font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: 0.08em;
+    color: var(--red); background: var(--red-dim); border: 0.5px solid var(--red-mid);
+    padding: 12px 28px; border-radius: 8px; text-decoration: none;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover { background: #4d1e1e; }
+
+  @media (max-width: 640px) {
+    .nav-links { gap: 2px; }
+    .nav-link  { font-size: 10px; padding: 6px 8px; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Browser <span>Extension</span></h1>
+  <p>Get real-time phishing alerts directly inside Gmail. The extension activates automatically on mail.google.com and connects to your PhishGuard account.</p>
+</div>
+
+<div class="section">
+  <div class="section-label">Choose your browser</div>
+  <div class="dev-notice">
+    ⚠ Extension is in active development — manual installation required via Developer Mode
+  </div>
+  <div class="ext-grid">
+
+    <div class="ext-card">
+      <div class="ext-card-head">
+        <div class="ext-icon ei-chrome">🌐</div>
+        <div>
+          <div class="ext-browser">Chrome</div>
+          <div class="ext-version">v1.0.0 · Manifest V3</div>
+        </div>
+      </div>
+      <div class="ext-desc">Works with Chrome, Edge, Brave, Arc and all Chromium-based browsers. Injects a scan panel directly into the Gmail interface.</div>
+      <div class="ext-badges">
+        <span class="ext-badge">Gmail</span>
+        <span class="ext-badge">Chromium</span>
+        <span class="ext-badge">MV3</span>
+      </div>
+      <a href="#" class="ext-btn eb-chrome">DOWNLOAD FOR CHROME</a>
+    </div>
+
+    <div class="ext-card">
+      <div class="ext-card-head">
+        <div class="ext-icon ei-firefox">🦊</div>
+        <div>
+          <div class="ext-browser">Firefox</div>
+          <div class="ext-version">Coming soon</div>
+        </div>
+      </div>
+      <div class="ext-desc">Firefox support is in active development. Sign up to be notified when the Firefox extension is available.</div>
+      <div class="ext-badges">
+        <span class="ext-badge">Gmail</span>
+        <span class="ext-badge">Firefox</span>
+      </div>
+      <span class="ext-btn eb-coming">COMING SOON</span>
+    </div>
+
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">Installation guide</div>
+  <div class="install-steps">
+    <div class="install-step">
+      <div class="step-num">STEP 01</div>
+      <div class="step-text"><strong>Download</strong> the extension package above and unzip the <strong>.zip</strong> file.</div>
+    </div>
+    <div class="install-step">
+      <div class="step-num">STEP 02</div>
+      <div class="step-text">Open <strong>chrome://extensions</strong> in your browser and enable <strong>Developer Mode</strong> (top right toggle).</div>
+    </div>
+    <div class="install-step">
+      <div class="step-num">STEP 03</div>
+      <div class="step-text">Click <strong>Load unpacked</strong> and select the extracted extension folder.</div>
+    </div>
+    <div class="install-step">
+      <div class="step-num">STEP 04</div>
+      <div class="step-text">Open <strong>Gmail</strong>. The PhishGuard shield icon appears — click it and log in to activate scanning.</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">FAQ</div>
+  <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-q">What permissions does the extension need?</div>
+      <div class="faq-a">The extension requests access to <code>mail.google.com</code> only. It reads email metadata visible in the Gmail interface and sends it to the PhishGuard API for analysis. No other sites are accessed.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Does the extension store my emails?</div>
+      <div class="faq-a">No. Emails are sent to the PhishGuard server for scanning and immediately discarded. Nothing is stored in the extension or sent to third parties beyond Google's own APIs.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Does it work without the web dashboard?</div>
+      <div class="faq-a">The extension connects to the PhishGuard backend at <code>https://polihackcommitmentissues2026-production.up.railway.app</code>. You need a PhishGuard account for real-time scanning to work.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can I scan a specific email, not just the latest ones?</div>
+      <div class="faq-a">Yes — open any email in Gmail and click the PhishGuard icon in the toolbar to scan that specific message on demand.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Is my data sold or shared?</div>
+      <div class="faq-a">No. PhishGuard uses <code>gmail.readonly</code> scope only — the minimum required. Your emails are never stored, sold, or shared with any third party.</div>
+    </div>
+  </div>
+</div>
+
+<div class="cta-strip">
+  <h2>Prefer the <span>web dashboard?</span></h2>
+  <p>No installation needed — connect your Gmail and start scanning directly from the browser.</p>
+  {% if is_logged_in %}
+    <a class="btn-primary" href="{% url 'dashboard' %}">OPEN DASHBOARD</a>
+  {% else %}
+    <a class="btn-primary" href="{% url 'login' %}">LOGIN WITH GOOGLE</a>
+  {% endif %}
+</div>
+{% endblock %}
