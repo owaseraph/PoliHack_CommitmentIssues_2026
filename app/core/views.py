@@ -136,7 +136,7 @@ def _enrich_email(email_entry: dict) -> dict:
     else:
         verdict, label, bar_color = "safe",       "SAFE",       "#3dd68c"
 
-    all_flags, bad_links, llm_reasons = [], [], []
+    all_flags, bad_links, llm_reasons, plugin_flags = [], [], [], []
 
     for sig in email_entry.get("detection_signals", []):
         for flag in sig.get("flags", []):
@@ -146,10 +146,18 @@ def _enrich_email(email_entry: dict) -> dict:
                 llm_reasons.append(flag.replace("llm:", ""))
             elif flag.startswith("llm_verdict:"):
                 llm_reasons.append("verdict: " + flag.replace("llm_verdict:", ""))
+            elif flag.startswith("keyword_match:"):
+                plugin_flags.append("🔍 Keyword: " + flag.replace("keyword_match:", ""))
+            elif flag.startswith("blacklisted_sender:"):
+                plugin_flags.append("🚫 Blacklisted: " + flag.replace("blacklisted_sender:", ""))
+            elif flag.startswith("regex_match:"):
+                plugin_flags.append("⚡ Pattern: " + flag.replace("regex_match:", ""))
+            elif flag.startswith("plugin_trusted_domain:"):
+                plugin_flags.append("✅ Trusted: " + flag.replace("plugin_trusted_domain:", ""))
             elif flag:
                 all_flags.append({
                     "text":   flag.replace("_", " "),
-                    "danger": "fail" in flag or "mismatch" in flag,
+                    "danger": "fail" in flag or "mismatch" in flag or "blacklist" in flag or "keyword" in flag,
                 })
 
     email_entry.update(
@@ -160,7 +168,8 @@ def _enrich_email(email_entry: dict) -> dict:
         all_flags=all_flags,
         bad_links=bad_links,
         llm_reasons=llm_reasons,
-        has_analysis=verdict != "safe" and bool(llm_reasons or bad_links),
+        plugin_flags=plugin_flags,
+        has_analysis=verdict != "safe" and bool(llm_reasons or bad_links or plugin_flags),
     )
     return email_entry
 

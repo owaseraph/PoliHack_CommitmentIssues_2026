@@ -401,6 +401,15 @@
               {% endfor %}
               <div class="divider"></div>
             {% endif %}
+            {% if email.plugin_flags %}
+              {% for flag in email.plugin_flags %}
+                <div class="reason-line">
+                  <span class="reason-dash">—</span>
+                  <span>{{ flag }}</span>
+                </div>
+              {% endfor %}
+              {% if email.llm_reasons %}<div class="divider"></div>{% endif %}
+            {% endif %}
             {% for reason in email.llm_reasons %}
               <div class="reason-line">
                 <span class="reason-dash">—</span>

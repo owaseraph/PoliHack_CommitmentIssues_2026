@@ -13,4 +13,4 @@ GOOGLE_SAFE_BROWSING_API_KEY = os.environ.get("GOOGLE_SAFE_BROWSING_API_KEY", ""
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 # Phishing detection threshold (0.0-1.0)
-PHISHING_SCORE_THRESHOLD = float(os.environ.get("PHISHING_SCORE_THRESHOLD", "0.5"))
+PHISHING_SCORE_THRESHOLD = float(os.environ.get("PHISHING_SCORE_THRESHOLD", "0.7"))
