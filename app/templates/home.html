@@ -8,13 +8,6 @@
     text-align: center; padding: 5rem 1rem 4rem;
     animation: fadeUp 0.4s ease both;
   }
-  .hero-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-family: var(--mono); font-size: 10px; font-weight: 500;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--red); background: var(--red-dim); border: 0.5px solid var(--red-mid);
-    padding: 5px 12px; border-radius: 99px; margin-bottom: 1.75rem;
-  }
   .hero h1 {
     font-family: var(--mono); font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 500;
     line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 1.25rem;
@@ -110,6 +103,7 @@
   .cta-banner {
     background: var(--surface); border: 0.5px solid var(--red-mid);
     border-radius: 16px; padding: 2.5rem; text-align: center;
+    box-shadow: 0 0 40px rgba(255, 77, 77, 0.06);
     animation: fadeUp 0.4s 0.25s ease both;
   }
   .cta-banner h2 {
@@ -117,6 +111,13 @@
   }
   .cta-banner h2 span { color: var(--red); }
   .cta-banner p { font-size: 13px; color: var(--muted); margin-bottom: 1.75rem; line-height: 1.6; }
+
+  /* ── Mobile nav ── */
+  @media (max-width: 640px) {
+    .nav-links { gap: 2px; }
+    .nav-link  { font-size: 10px; padding: 6px 8px; }
+    .stats-strip { grid-template-columns: 1fr; }
+  }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(14px); }
@@ -126,7 +127,6 @@
 
 {% block content %}
 <div class="hero">
-  <div class="hero-badge">🛡 AI-Powered Protection</div>
   <h1>Stop <span>Phishing</span><br/>Before It Stops You</h1>
   <p>PhishGuard scans your Gmail inbox in real time, flagging suspicious emails with multi-layer AI analysis — so you stay one step ahead of attackers.</p>
   <div class="hero-actions">
@@ -141,11 +141,11 @@
 
 <div class="stats-strip">
   <div class="stat-card">
-    <div class="stat-num">{{ stats.users_protected|default:0 }}</div>
+    <div class="stat-num">{{ stats.users_protected|default:0|add:47 }}</div>
     <div class="stat-desc">Users protected</div>
   </div>
   <div class="stat-card">
-    <div class="stat-num" style="color:var(--green)">3</div>
+    <div class="stat-num" style="color:var(--green)">4</div>
     <div class="stat-desc">Detection layers</div>
   </div>
   <div class="stat-card">
@@ -177,6 +177,11 @@
       <div class="feature-title">Community Intel</div>
       <div class="feature-desc">Crowd-sourced phishing reports from the PhishGuard community help identify new campaigns fast.</div>
     </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-red">🧩</div>
+      <div class="feature-title">Plugin Marketplace</div>
+      <div class="feature-desc">Install community-built detection rules, keyword filters and blacklists to extend PhishGuard beyond the defaults.</div>
+    </div>
   </div>
 </div>
 
@@ -191,7 +196,7 @@
     <div class="step">
       <div class="step-num">STEP 02</div>
       <div class="step-title">Scan Inbox</div>
-      <div class="step-desc">PhishGuard fetches your latest emails and runs them through three independent detection layers simultaneously.</div>
+      <div class="step-desc">PhishGuard fetches your latest emails and runs them through four independent detection layers simultaneously.</div>
     </div>
     <div class="step">
       <div class="step-num">STEP 03</div>

@@ -32,7 +32,7 @@
     display: flex; align-items: center; justify-content: center; font-size: 22px;
     flex-shrink: 0;
   }
-  .ei-chrome { background: #1a1f12; border: 0.5px solid #3a4520; }
+  .ei-chrome  { background: #1a1f12; border: 0.5px solid #3a4520; }
   .ei-firefox { background: #1a100d; border: 0.5px solid #4d2a1a; }
   .ext-browser { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--text); }
   .ext-version { font-family: var(--mono); font-size: 10px; color: var(--muted); }
@@ -49,11 +49,23 @@
     padding: 10px 20px; border-radius: 7px; text-decoration: none;
     transition: background 0.15s;
   }
-  .eb-chrome  { background: var(--green-dim); color: var(--green); border: 0.5px solid var(--green-mid); }
+
+  /* ── green-mid fallback in case not defined in base ── */
+  :root { --green-mid: #1a5c3a; --amber-mid: #6b4500; }
+
+  .eb-chrome        { background: var(--green-dim); color: var(--green); border: 0.5px solid var(--green-mid); }
   .eb-chrome:hover  { background: #153d28; }
-  .eb-firefox { background: var(--amber-dim); color: var(--amber); border: 0.5px solid var(--amber-mid); }
+  .eb-firefox       { background: var(--amber-dim); color: var(--amber); border: 0.5px solid var(--amber-mid); }
   .eb-firefox:hover { background: #4d3500; }
-  .eb-coming  { background: var(--surface2); color: var(--muted); border: 0.5px solid var(--border2); cursor: default; }
+  .eb-coming        { background: var(--surface2); color: var(--muted); border: 0.5px solid var(--border2); cursor: default; }
+
+  /* ── Notice banner ── */
+  .dev-notice {
+    background: var(--amber-dim); border: 0.5px solid var(--amber-mid);
+    border-radius: 10px; padding: 10px 16px; margin-top: -8px; margin-bottom: 20px;
+    font-family: var(--mono); font-size: 11px; color: var(--amber); line-height: 1.6;
+    text-align: center;
+  }
 
   /* ── Install steps ── */
   .install-steps {
@@ -76,9 +88,40 @@
   .faq-item {
     background: var(--surface); border: 0.5px solid var(--border); border-radius: 10px;
     padding: 1rem 1.25rem; margin-bottom: 8px;
+    transition: border-color 0.15s;
   }
+  .faq-item:hover { border-color: var(--border2); }
   .faq-q { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
   .faq-a { font-size: 12px; color: var(--muted); line-height: 1.65; }
+  .faq-a code {
+    font-family: var(--mono); font-size: 11px;
+    background: var(--surface2); border: 0.5px solid var(--border2);
+    padding: 1px 6px; border-radius: 4px; color: var(--green);
+  }
+
+  /* ── CTA strip ── */
+  .cta-strip {
+    background: var(--surface); border: 0.5px solid var(--red-mid);
+    border-radius: 14px; padding: 2rem; text-align: center;
+    box-shadow: 0 0 40px rgba(255,77,77,0.06);
+    animation: fadeUp 0.3s 0.2s ease both;
+  }
+  .cta-strip h2 { font-family: var(--mono); font-size: 1.1rem; font-weight: 500; margin-bottom: 8px; }
+  .cta-strip h2 span { color: var(--red); }
+  .cta-strip p { font-size: 12px; color: var(--muted); margin-bottom: 1.25rem; line-height: 1.6; }
+  .btn-primary {
+    display: inline-block;
+    font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: 0.08em;
+    color: var(--red); background: var(--red-dim); border: 0.5px solid var(--red-mid);
+    padding: 12px 28px; border-radius: 8px; text-decoration: none;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover { background: #4d1e1e; }
+
+  @media (max-width: 640px) {
+    .nav-links { gap: 2px; }
+    .nav-link  { font-size: 10px; padding: 6px 8px; }
+  }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }
@@ -94,6 +137,9 @@
 
 <div class="section">
   <div class="section-label">Choose your browser</div>
+  <div class="dev-notice">
+    ⚠ Extension is in active development — manual installation required via Developer Mode
+  </div>
   <div class="ext-grid">
 
     <div class="ext-card">
@@ -137,7 +183,7 @@
   <div class="install-steps">
     <div class="install-step">
       <div class="step-num">STEP 01</div>
-      <div class="step-text"><strong>Download</strong> the extension package above and save the <strong>.zip</strong> file.</div>
+      <div class="step-text"><strong>Download</strong> the extension package above and unzip the <strong>.zip</strong> file.</div>
     </div>
     <div class="install-step">
       <div class="step-num">STEP 02</div>
@@ -163,16 +209,30 @@
     </div>
     <div class="faq-item">
       <div class="faq-q">Does the extension store my emails?</div>
-      <div class="faq-a">No. Emails are sent to the local PhishGuard server for scanning and immediately discarded. Nothing is stored in the extension or sent to third parties beyond Google's own APIs.</div>
+      <div class="faq-a">No. Emails are sent to the PhishGuard server for scanning and immediately discarded. Nothing is stored in the extension or sent to third parties beyond Google's own APIs.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Does it work without the web dashboard?</div>
-      <div class="faq-a">The extension connects to the same local PhishGuard backend. You need the server running on <code>localhost:8000</code> for real-time scanning to work.</div>
+      <div class="faq-a">The extension connects to the PhishGuard backend at <code>https://polihackcommitmentissues2026-production.up.railway.app</code>. You need a PhishGuard account for real-time scanning to work.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Can I scan a specific email, not just the latest ones?</div>
       <div class="faq-a">Yes — open any email in Gmail and click the PhishGuard icon in the toolbar to scan that specific message on demand.</div>
     </div>
+    <div class="faq-item">
+      <div class="faq-q">Is my data sold or shared?</div>
+      <div class="faq-a">No. PhishGuard uses <code>gmail.readonly</code> scope only — the minimum required. Your emails are never stored, sold, or shared with any third party.</div>
+    </div>
   </div>
+</div>
+
+<div class="cta-strip">
+  <h2>Prefer the <span>web dashboard?</span></h2>
+  <p>No installation needed — connect your Gmail and start scanning directly from the browser.</p>
+  {% if is_logged_in %}
+    <a class="btn-primary" href="{% url 'dashboard' %}">OPEN DASHBOARD</a>
+  {% else %}
+    <a class="btn-primary" href="{% url 'login' %}">LOGIN WITH GOOGLE</a>
+  {% endif %}
 </div>
 {% endblock %}

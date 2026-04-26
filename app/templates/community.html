@@ -11,7 +11,6 @@
   .layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
   @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } }
 
-  /* ── Report card ── */
   .report-card {
     background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px;
     padding: 1rem 1.25rem; margin-bottom: 8px;
@@ -26,60 +25,77 @@
 
   .report-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 6px; }
   .report-title { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.45; }
-  .report-sender { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .report-sender {
+    font-family: var(--mono); font-size: 11px; color: var(--red);
+    background: var(--red-dim); border: 0.5px solid var(--red-mid);
+    display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px;
+  }
   .report-desc { font-size: 12px; color: var(--muted); line-height: 1.65; margin-bottom: 10px; }
   .report-footer { display: flex; align-items: center; justify-content: space-between; }
   .report-meta { font-family: var(--mono); font-size: 10px; color: var(--muted2); }
 
   .upvote-btn {
     display: inline-flex; align-items: center; gap: 5px;
-    font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.06em;
-    color: var(--muted); background: var(--surface2); border: 0.5px solid var(--border2);
-    padding: 4px 10px; border-radius: 5px; cursor: pointer;
-    transition: color 0.15s, border-color 0.15s; text-decoration: none;
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 0.5px solid var(--border2);
+    padding: 4px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    text-decoration: none;
   }
-  .upvote-btn:hover { color: var(--amber); border-color: var(--amber-mid); }
+  .upvote-btn:hover {
+    color: var(--amber);
+    border-color: var(--amber-mid);
+    background: var(--amber-dim);
+  }
+  .upvote-btn.upvoted {
+    color: var(--amber);
+    border-color: #5c3e00;
+    background: var(--amber-dim);
+  }
 
-  /* ── Submit form ── */
+  .threat-badge {
+    font-family: var(--mono); font-size: 9px; font-weight: 500; letter-spacing: 0.08em;
+    padding: 2px 7px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;
+  }
+  .threat-high { color: var(--red); background: var(--red-dim); border: 0.5px solid var(--red-mid); }
+  .threat-med  { color: var(--amber); background: var(--amber-dim); border: 0.5px solid #6b4500; }
+  .threat-low  { color: var(--muted); background: var(--surface2); border: 0.5px solid var(--border2); }
+
   .submit-box {
     background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px;
     padding: 1.5rem; position: sticky; top: 70px;
     animation: fadeUp 0.3s 0.1s ease both;
   }
   .submit-box h2 { font-family: var(--mono); font-size: 13px; font-weight: 500; margin-bottom: 1rem; }
+
   .form-field { margin-bottom: 12px; }
   .form-label {
-    display: block; font-family: var(--mono); font-size: 10px; font-weight: 500;
+    display: block; font-family: var(--mono); font-size: 10px;
     letter-spacing: 0.08em; color: var(--muted); margin-bottom: 5px;
   }
+
   .form-input, .form-textarea {
     width: 100%; background: var(--surface2); border: 0.5px solid var(--border2);
-    border-radius: 7px; color: var(--text); font-family: var(--sans); font-size: 13px;
-    padding: 9px 12px; transition: border-color 0.15s; outline: none;
+    border-radius: 7px; color: var(--text); font-size: 13px;
+    padding: 9px 12px; outline: none;
   }
-  .form-input:focus, .form-textarea:focus { border-color: var(--red-mid); }
+
   .form-textarea { resize: vertical; min-height: 90px; }
+
   .submit-btn {
     width: 100%; background: var(--red-dim); color: var(--red);
     border: 0.5px solid var(--red-mid); border-radius: 7px;
-    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    font-family: var(--mono); font-size: 11px;
     letter-spacing: 0.08em; padding: 10px; cursor: pointer;
-    transition: background 0.15s; margin-top: 4px;
+    margin-top: 4px;
   }
-  .submit-btn:hover { background: #4d1e1e; }
-  .login-prompt {
-    background: var(--surface2); border: 0.5px solid var(--border); border-radius: 8px;
-    padding: 1rem; text-align: center; font-size: 12px; color: var(--muted); line-height: 1.6;
-  }
-  .login-prompt a { color: var(--red); text-decoration: none; }
-  .login-prompt a:hover { text-decoration: underline; }
 
   .empty { text-align: center; padding: 3rem 1rem; font-family: var(--mono); font-size: 13px; color: var(--muted); }
-  .section-label {
-    font-family: var(--mono); font-size: 10px; font-weight: 500;
-    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
-    margin-bottom: 12px;
-  }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }
@@ -94,60 +110,117 @@
 </div>
 
 <div class="layout">
-  <!-- Feed -->
+
+  <!-- FEED -->
   <div>
-    <div class="section-label">Recent reports</div>
     {% if not reports %}
       <div class="empty">No reports yet — be the first to submit one.</div>
     {% endif %}
+
     {% for report in reports %}
       <div class="report-card">
         <div class="report-head">
           <div class="report-title">{{ report.title }}</div>
+
+          {% if report.upvotes >= 40 %}
+            <span class="threat-badge threat-high">HIGH THREAT</span>
+          {% elif report.upvotes >= 20 %}
+            <span class="threat-badge threat-med">ACTIVE</span>
+          {% else %}
+            <span class="threat-badge threat-low">REPORTED</span>
+          {% endif %}
         </div>
+
         {% if report.sender_email %}
-          <div class="report-sender">From: {{ report.sender_email }}</div>
+          <div class="report-sender">{{ report.sender_email }}</div>
         {% endif %}
+
         <div class="report-desc">{{ report.description }}</div>
+
         <div class="report-footer">
           <span class="report-meta">
-            {{ report.reported_by|default:"anonymous" }} &nbsp;·&nbsp;
-            {{ report.created_at|date:"M d, Y" }}
+            {{ report.reported_by|default:"anonymous" }} · {{ report.created_at|date:"M d, Y" }}
           </span>
-          <form method="post" action="{% url 'upvote_report' report.id %}" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit" class="upvote-btn">▲ {{ report.upvotes }}</button>
-          </form>
+
+          <!-- UPDATED UPVOTE BUTTON -->
+          <button class="upvote-btn {% if report.upvoted %}upvoted{% endif %}"
+                  onclick="toggleUpvote({{ report.id }}, this)"
+                  data-upvoted="{{ report.upvoted|yesno:'true,false' }}">
+            ▲ <span class="upvote-count">{{ report.upvotes }}</span>
+          </button>
         </div>
       </div>
     {% endfor %}
   </div>
 
-  <!-- Sidebar -->
+  <!-- SIDEBAR -->
   <div class="submit-box">
     <h2>REPORT A CAMPAIGN</h2>
+
     {% if is_logged_in %}
       <form method="post" action="{% url 'community' %}">
         {% csrf_token %}
+
         <div class="form-field">
-          <label class="form-label" for="title">SUBJECT / CAMPAIGN NAME *</label>
-          <input class="form-input" type="text" id="title" name="title" placeholder="e.g. Netflix password reset scam" required maxlength="500"/>
+          <label class="form-label">SUBJECT *</label>
+          <input class="form-input" name="title" required maxlength="500">
         </div>
+
         <div class="form-field">
-          <label class="form-label" for="sender_email">SENDER EMAIL</label>
-          <input class="form-input" type="text" id="sender_email" name="sender_email" placeholder="noreply@fake-netflix.com" maxlength="500"/>
+          <label class="form-label">SENDER EMAIL</label>
+          <input class="form-input" name="sender_email">
         </div>
+
         <div class="form-field">
-          <label class="form-label" for="description">DESCRIPTION *</label>
-          <textarea class="form-textarea" id="description" name="description" placeholder="Describe the phishing attempt — what tactics were used, what was requested…" required></textarea>
+          <label class="form-label">DESCRIPTION *</label>
+          <textarea class="form-textarea" name="description" required></textarea>
         </div>
-        <button type="submit" class="submit-btn">SUBMIT REPORT</button>
+
+        <button class="submit-btn">SUBMIT REPORT</button>
       </form>
     {% else %}
       <div class="login-prompt">
-        <a href="{% url 'login' %}">Login with Google</a> to submit a phishing report and help protect the community.
+        <a href="{% url 'login' %}">Login with Google</a> to submit a report.
       </div>
     {% endif %}
   </div>
+
 </div>
+
+<script>
+const CSRF = "{{ csrf_token }}";
+const IS_LOGGED_IN = {{ is_logged_in|yesno:'true,false' }};
+const LOGIN_URL = "{% url 'login' %}";
+
+async function toggleUpvote(reportId, btn) {
+  if (!IS_LOGGED_IN) {
+    window.location.href = LOGIN_URL;
+    return;
+  }
+
+  btn.disabled = true;
+
+  const r = await fetch(`/community/upvote/${reportId}/`, {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": CSRF
+    }
+  });
+
+  const d = await r.json();
+
+  btn.querySelector(".upvote-count").textContent = d.upvotes;
+
+  if (d.upvoted) {
+    btn.classList.add("upvoted");
+  } else {
+    btn.classList.remove("upvoted");
+  }
+
+  btn.dataset.upvoted = d.upvoted ? "true" : "false";
+
+  btn.disabled = false;
+}
+</script>
+
 {% endblock %}

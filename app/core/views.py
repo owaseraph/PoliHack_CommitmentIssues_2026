@@ -128,14 +128,15 @@ def _enrich_email(email_entry: dict) -> dict:
     pct         = round(score * 100)
     is_phishing = email_entry.get("is_phishing", False)
 
-    if is_phishing:
+    # Three-tier verdict system: phishing (high confidence) / suspicious (medium) / safe (low risk)
+    if is_phishing or score > 0.7:
         verdict, label, bar_color = "phishing",   "PHISHING",   "#ff4d4d"
-    elif score > 0.5:
+    elif score > 0.4:
         verdict, label, bar_color = "suspicious", "SUSPICIOUS", "#f0a500"
     else:
         verdict, label, bar_color = "safe",       "SAFE",       "#3dd68c"
 
-    all_flags, bad_links, llm_reasons = [], [], []
+    all_flags, bad_links, llm_reasons, plugin_flags = [], [], [], []
 
     for sig in email_entry.get("detection_signals", []):
         for flag in sig.get("flags", []):
@@ -145,10 +146,18 @@ def _enrich_email(email_entry: dict) -> dict:
                 llm_reasons.append(flag.replace("llm:", ""))
             elif flag.startswith("llm_verdict:"):
                 llm_reasons.append("verdict: " + flag.replace("llm_verdict:", ""))
+            elif flag.startswith("keyword_match:"):
+                plugin_flags.append("🔍 Keyword: " + flag.replace("keyword_match:", ""))
+            elif flag.startswith("blacklisted_sender:"):
+                plugin_flags.append("🚫 Blacklisted: " + flag.replace("blacklisted_sender:", ""))
+            elif flag.startswith("regex_match:"):
+                plugin_flags.append("⚡ Pattern: " + flag.replace("regex_match:", ""))
+            elif flag.startswith("plugin_trusted_domain:"):
+                plugin_flags.append("✅ Trusted: " + flag.replace("plugin_trusted_domain:", ""))
             elif flag:
                 all_flags.append({
                     "text":   flag.replace("_", " "),
-                    "danger": "fail" in flag or "mismatch" in flag,
+                    "danger": "fail" in flag or "mismatch" in flag or "blacklist" in flag or "keyword" in flag,
                 })
 
     email_entry.update(
@@ -159,7 +168,8 @@ def _enrich_email(email_entry: dict) -> dict:
         all_flags=all_flags,
         bad_links=bad_links,
         llm_reasons=llm_reasons,
-        has_analysis=verdict != "safe" and bool(llm_reasons or bad_links),
+        plugin_flags=plugin_flags,
+        has_analysis=verdict != "safe" and bool(llm_reasons or bad_links or plugin_flags),
     )
     return email_entry
 
@@ -389,9 +399,19 @@ def community(request):
 
         return redirect(reverse("community"))
 
+    # Get upvoted report IDs from session
+    upvoted_ids = set(request.session.get("upvoted_reports", []))
+
     reports = CommunityReport.objects.all()[:50]
+    
+    # Annotate each report with upvoted status
+    reports_with_status = []
+    for report in reports:
+        report.upvoted = report.id in upvoted_ids
+        reports_with_status.append(report)
+
     return render(request, "community.html", {
-        "reports":      reports,
+        "reports":      reports_with_status,
         "is_logged_in": bool(request.session.get("user_id")),
         "user_name":    request.session.get("user_name", ""),
     })
@@ -405,22 +425,34 @@ def upvote_report(request, report_id):
     """
     upvoted = set(request.session.get("upvoted_reports", []))
 
+    report = get_object_or_404(CommunityReport, id=report_id)
+
     if report_id in upvoted:
-        report = get_object_or_404(CommunityReport, id=report_id)
-        return JsonResponse({"upvotes": report.upvotes, "already_voted": True})
-
-    report          = get_object_or_404(CommunityReport, id=report_id)
-    report.upvotes += 1
-    report.save()
-
-    upvoted.add(report_id)
-    request.session["upvoted_reports"] = list(upvoted)
-
-    return JsonResponse({"upvotes": report.upvotes, "already_voted": False})
+        # Remove upvote
+        upvoted.remove(report_id)
+        report.upvotes = max(0, report.upvotes - 1)
+        report.save()
+        request.session["upvoted_reports"] = list(upvoted)
+        return JsonResponse({"upvotes": report.upvotes, "upvoted": False})
+    else:
+        # Add upvote
+        upvoted.add(report_id)
+        report.upvotes += 1
+        report.save()
+        request.session["upvoted_reports"] = list(upvoted)
+        return JsonResponse({"upvotes": report.upvotes, "upvoted": True})
 
 
 def download(request):
     return render(request, "download.html", {
+        "is_logged_in": bool(request.session.get("user_id")),
+        "user_name":    request.session.get("user_name", ""),
+    })
+
+
+def check_email(request):
+    """Standalone email checker page for non-logged-in users."""
+    return render(request, "check_email.html", {
         "is_logged_in": bool(request.session.get("user_id")),
         "user_name":    request.session.get("user_name", ""),
     })
@@ -431,6 +463,7 @@ def api_scan(request):
     """
     JSON endpoint for external callers (future browser extension, etc).
     Protected by a static API key — set EXTENSION_API_KEY in Railway env vars.
+    Also accepts 'public-demo-key' for the check_email page.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -438,7 +471,9 @@ def api_scan(request):
     # ✅ Require API key so this endpoint can't be abused to drain Gemini quota
     expected_key = os.environ.get("EXTENSION_API_KEY", "")
     provided_key = request.headers.get("X-API-Key", "")
-    if not expected_key or provided_key != expected_key:
+    
+    # Allow public demo key for check_email page, or real API key for extensions
+    if provided_key != "public-demo-key" and (not expected_key or provided_key != expected_key):
         return JsonResponse({"error": "Unauthorized"}, status=401)
 
     try:
@@ -643,8 +678,8 @@ def my_plugins(request):
     )
 
     return render(request, "my_plugins.html", {
-        "installs":  installs,
-        "authored":  authored,
-        "user_name": request.session.get("user_name", ""),
+        "installs":   installs,
+        "authored":   authored,
+        "user_name":  request.session.get("user_name", ""),
         "user_email": request.session.get("user_email", ""),
     })

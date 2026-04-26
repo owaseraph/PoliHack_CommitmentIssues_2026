@@ -1,217 +1,302 @@
-"""
-Management command: seed_marketplace
-
-Populates the marketplace with a curated set of demo plugins so there is
-something to browse even on a fresh database.  Idempotent — skips any plugin
-whose name already exists, so it is safe to run on every deploy.
-"""
-
 from django.core.management.base import BaseCommand
 from core.models import Plugin
 
-SEED_AUTHOR_ID    = "system"
-SEED_AUTHOR_EMAIL = "phishguard@system"
+DUMMY_AUTHOR_ID    = "seed_bot_000"
+DUMMY_AUTHOR_EMAIL = "community@phishguard.dev"
+
 
 PLUGINS = [
-    # ── Sender Blacklists ────────────────────────────────────────────────
+
+    # ── Blacklists ────────────────────────────────────────────────────────────
     {
-        "name":        "Common Phishing Domains",
-        "description": "A curated list of domains frequently used in phishing campaigns impersonating banks, payment providers, and tech giants.",
-        "plugin_type": Plugin.TYPE_BLACKLIST,
-        "installs":    142,
-        "upvotes":     38,
+        "name":        "Known Phishing Senders",
+        "description": "A curated blacklist of sender domains and addresses "
+                       "repeatedly used in phishing campaigns targeting EU users. "
+                       "Updated weekly by the PhishGuard community.",
+        "plugin_type": "blacklist",
+        "installs":    312,
+        "upvotes":     87,
         "rules": """\
-# Known phishing domains
-paypa1.com
-micros0ft.com
-amazoon.com
-apple-id-verify.net
-netflix-billing-update.com
-secure-bankofamerica.xyz
-irs-refund-portal.net
-google-accounts-alert.info
-support-apple.com
-icloud-unlock.net
+# High-confidence phishing sender domains — do not remove without evidence
+noreply@secure-paypal-alert.com
+support@account-verification-google.net
+billing@netflix-suspend-notice.com
+security@apple-id-locked.info
+admin@microsofft-365-login.com
+update@amazon-prime-renewal-alert.net
+no-reply@dhl-parcel-notification.xyz
+verify@steam-community-support.ru
+alert@bankofamerica-secure-login.pw
+team@linkedln-notification.com
+# Typosquatting variants of common brands
+noreply@paypa1.com
+support@g00gle-account.com
+help@amaz0n-orders.net
 """,
     },
     {
         "name":        "Crypto Scam Senders",
-        "description": "Blocks emails from addresses associated with cryptocurrency giveaway and investment scams.",
-        "plugin_type": Plugin.TYPE_BLACKLIST,
-        "installs":    89,
-        "upvotes":     21,
+        "description": "Blocks emails from domains and addresses associated with "
+                       "cryptocurrency investment scams, fake exchange alerts, and "
+                       "wallet-draining phishing attempts.",
+        "plugin_type": "blacklist",
+        "installs":    198,
+        "upvotes":     54,
         "rules": """\
-# Crypto scam senders
-noreply@bitcoin-rewards.com
-support@elon-crypto-giveaway.com
-admin@btc-doubler.net
-invest@crypto-profits-daily.xyz
-airdrop@eth-giveaway.io
-claim@binance-promo.net
+# Fake exchange / wallet alerts
+security@binance-withdrawal-alert.net
+noreply@coinbase-account-hold.info
+alert@metamask-security-notice.xyz
+support@crypto-wallet-verify.com
+team@ethereum-airdrop-claim.net
+admin@bitcoin-prize-winner.com
+no-reply@trust-wallet-alert.org
+verify@ledger-device-confirm.info
 """,
     },
-    # ── Keyword Filters ──────────────────────────────────────────────────
+
+    # ── Keyword filters ───────────────────────────────────────────────────────
     {
-        "name":        "Urgency & Fear Tactics",
-        "description": "Flags emails using classic urgency and fear manipulation language to pressure users into hasty action.",
-        "plugin_type": Plugin.TYPE_KEYWORD,
-        "installs":    203,
-        "upvotes":     61,
+        "name":        "Urgency & Scare Tactics",
+        "description": "Flags emails using high-pressure language designed to "
+                       "panic recipients into clicking links or revealing "
+                       "credentials. Targets the most common social-engineering "
+                       "patterns seen in phishing.",
+        "plugin_type": "keyword",
+        "installs":    445,
+        "upvotes":     130,
         "rules": """\
 # Urgency triggers
 your account has been suspended
-act immediately
-verify your identity now
-unusual sign-in activity
-your password will expire
-click here to avoid suspension
-limited time offer
-confirm within 24 hours
-your account will be terminated
-action required
+immediate action required
+your account will be closed
+verify your identity within 24 hours
+unusual sign-in activity detected
+we have detected suspicious activity
+your password has been compromised
+action needed: secure your account
+final warning
+limited time to respond
+# Fear triggers
+unauthorized access
+your account is at risk
+security breach detected
+you have been selected for verification
+confirm your information to avoid suspension
 """,
     },
     {
-        "name":        "Financial Bait Keywords",
-        "description": "Detects emails baiting users with fake prizes, refunds, and lottery wins.",
-        "plugin_type": Plugin.TYPE_KEYWORD,
-        "installs":    115,
-        "upvotes":     29,
+        "name":        "Prize & Lottery Scams",
+        "description": "Catches advance-fee fraud and prize scam emails that "
+                       "promise winnings, inheritances, or grants in exchange "
+                       "for upfront payments or personal details.",
+        "plugin_type": "keyword",
+        "installs":    271,
+        "upvotes":     61,
         "rules": """\
-# Financial bait
-you have won
+you have been selected as a winner
 claim your prize
-unclaimed refund
-congratulations you have been selected
-wire transfer required
-inheritance funds
-send your bank details
-lottery winner
-free gift card
-exclusive reward
+you have won
+lottery jackpot
+unclaimed funds
+inheritance transfer
+bank transfer of funds
+I am the son of a deceased
+confidential business proposal
+I need your assistance to transfer
+percentage of the total sum
+you are the beneficiary
+western union transfer
+advance fee
 """,
     },
     {
-        "name":        "HR & Payroll Impersonation",
-        "description": "Catches internal-impersonation phishing pretending to be HR or payroll departments.",
-        "plugin_type": Plugin.TYPE_KEYWORD,
-        "installs":    77,
-        "upvotes":     19,
+        "name":        "Credential Harvesting Keywords",
+        "description": "Detects language specifically designed to extract "
+                       "usernames, passwords, credit card numbers, or "
+                       "social security numbers from recipients.",
+        "plugin_type": "keyword",
+        "installs":    389,
+        "upvotes":     102,
         "rules": """\
-# HR / payroll impersonation
-update your direct deposit
-payroll verification required
-w-2 form available
-benefits enrollment deadline
-new employee onboarding link
-hr policy update required
-salary adjustment notice
+enter your password
+confirm your credit card
+provide your social security number
+re-enter your banking details
+update your payment method
+your card ending in
+billing information required
+enter your pin
+full card number
+cvv security code
+mother's maiden name
+date of birth for verification
+provide your national ID
 """,
     },
-    # ── Regex Patterns ───────────────────────────────────────────────────
-    {
-        "name":        "Fake Invoice Detector",
-        "description": "Regular expressions to catch fake invoice and billing scam emails.",
-        "plugin_type": Plugin.TYPE_REGEX,
-        "installs":    134,
-        "upvotes":     44,
-        "rules": """\
-# Fake invoice patterns
-invoice\\s*#?\\s*\\d{4,}
-payment\\s+of\\s+\\$[\\d,]+\\.\\d{2}\\s+is\\s+(due|overdue|pending)
-your\\s+(account|subscription)\\s+will\\s+be\\s+charged
-unpaid\\s+(invoice|balance|amount)
-\\bINV-\\d{4,}\\b
-""",
-    },
+
+    # ── Regex patterns ────────────────────────────────────────────────────────
     {
         "name":        "Suspicious URL Patterns",
-        "description": "Regex rules targeting URLs with IP addresses, unusual ports, or lookalike domains embedded in email bodies.",
-        "plugin_type": Plugin.TYPE_REGEX,
-        "installs":    98,
-        "upvotes":     33,
+        "description": "Regex rules that catch obfuscated, typosquatted, and "
+                       "redirect-based phishing URLs embedded in email bodies. "
+                       "Covers common tricks like IP addresses as hosts, "
+                       "excessive subdomains, and misleading paths.",
+        "plugin_type": "regex",
+        "installs":    502,
+        "upvotes":     148,
         "rules": """\
-# Suspicious URL patterns
+# IP address used directly as host (no domain name)
 https?://\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}
-https?://[^/]+:\\d{4,5}/
-paypal\\.[a-z]{3,}\\.com
-verify[-.]account\\.[a-z]{2,}
-login[-.]secure[-.]\\w+\\.com
-""",
-    },
-    # ── Trusted Domain Lists ─────────────────────────────────────────────
-    {
-        "name":        "Developer Tools & Services",
-        "description": "Marks well-known developer services as always safe, reducing false positives on transactional emails from these platforms.",
-        "plugin_type": Plugin.TYPE_DOMAIN_LIST,
-        "installs":    187,
-        "upvotes":     52,
-        "rules": """\
-# Developer services
-github.com
-gitlab.com
-npmjs.com
-pypi.org
-stackoverflow.com
-vercel.com
-netlify.com
-railway.app
-cloudflare.com
-fly.io
-render.com
-digitalocean.com
+# Excessive subdomains (4+) — classic phishing redirect trick
+https?://([a-z0-9-]+\\.){4,}[a-z]{2,}
+# URL contains a legitimate brand name but the real domain is different
+https?://[^/]*(paypal|google|apple|amazon|microsoft|netflix)[^/]*\\.[^/]{3,}/
+# Base64-looking path segments — used to hide destination
+https?://[^/]+/[A-Za-z0-9+/]{30,}={0,2}
+# Shortened URL services commonly abused in phishing
+https?://(bit\\.ly|tinyurl\\.com|t\\.co|ow\\.ly|goo\\.gl|cutt\\.ly)/
+# Redirect parameters pointing elsewhere
+https?://[^?]+\\?.*url=https?://
+https?://[^?]+\\?.*redirect=https?://
 """,
     },
     {
-        "name":        "Major Productivity Suites",
-        "description": "Trusts emails from Google Workspace, Microsoft 365, Notion, Slack, and similar productivity platforms.",
-        "plugin_type": Plugin.TYPE_DOMAIN_LIST,
-        "installs":    221,
-        "upvotes":     67,
+        "name":        "Fake Invoice & Payment Regex",
+        "description": "Matches patterns found in fake invoice emails: "
+                       "fabricated invoice numbers, payment amounts formatted "
+                       "to look legitimate, and urgency phrases combined with "
+                       "financial figures.",
+        "plugin_type": "regex",
+        "installs":    167,
+        "upvotes":     43,
         "rules": """\
-# Productivity suites
+# Invoice number patterns (INV- or # followed by digits)
+\\bINV-?\\d{4,8}\\b
+# Currency amounts in suspicious context
+\\$[\\d,]+\\.\\d{2}\\s*(is\\s+)?due
+payment\\s+of\\s+\\$[\\d,]+
+# Overdue / final notice language next to a number
+(overdue|past due|final notice).{0,40}\\$[\\d,]+
+# Wire transfer instructions
+(wire|bank).{0,20}transfer.{0,40}account\\s+number
+routing\\s+number\\s*:?\\s*\\d{9}
+""",
+    },
+
+    # ── Trusted domain lists ──────────────────────────────────────────────────
+    {
+        "name":        "Major Tech & Cloud Providers",
+        "description": "Whitelist of legitimate sending domains for the most "
+                       "common tech companies. Reduces false positives for "
+                       "emails from Google, Microsoft, Apple, Amazon, and "
+                       "similar services.",
+        "plugin_type": "domain_list",
+        "installs":    634,
+        "upvotes":     201,
+        "rules": """\
+# Google
 google.com
+accounts.google.com
+gmail.com
+googlemail.com
+# Microsoft
 microsoft.com
-office365.com
+microsoftonline.com
+office.com
 outlook.com
+live.com
+hotmail.com
+# Apple
+apple.com
+icloud.com
+# Amazon / AWS
+amazon.com
+amazonaws.com
+aws.amazon.com
+# Meta
+meta.com
+facebook.com
+instagram.com
+# GitHub / Atlassian / developer tools
+github.com
+atlassian.com
 slack.com
 notion.so
-linear.app
-atlassian.com
-jira.com
-confluence.com
-zoom.us
+""",
+    },
+    {
+        "name":        "Romanian University & Gov Domains",
+        "description": "Trusted domain list covering Romanian public universities, "
+                       "government institutions, and research networks. Useful for "
+                       "students and staff to avoid false positives on official "
+                       "institutional emails.",
+        "plugin_type": "domain_list",
+        "installs":    88,
+        "upvotes":     29,
+        "rules": """\
+# Universities
+utcluj.ro
+ubbcluj.ro
+upt.ro
+unibuc.ro
+ase.ro
+tuiasi.ro
+umfcluj.ro
+# Government & public institutions
+gov.ro
+mai.gov.ro
+edu.ro
+anaf.ro
+# Research networks
+ro.net
+roedunet.ro
 """,
     },
 ]
 
 
 class Command(BaseCommand):
-    help = "Seed the marketplace with demo plugins (idempotent)."
+    help = "Seed the plugin marketplace with realistic dummy plugins."
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--clear",
+            action="store_true",
+            help="Delete all existing seed plugins before re-seeding.",
+        )
 
     def handle(self, *args, **options):
+        if options["clear"]:
+            deleted, _ = Plugin.objects.filter(author_id=DUMMY_AUTHOR_ID).delete()
+            self.stdout.write(self.style.WARNING(f"Cleared {deleted} existing seed plugins."))
+
         created = 0
         skipped = 0
-        for spec in PLUGINS:
-            name = spec["name"]
-            if Plugin.objects.filter(name=name).exists():
-                skipped += 1
-                continue
-            Plugin.objects.create(
-                name=spec["name"],
-                description=spec["description"],
-                plugin_type=spec["plugin_type"],
-                rules=spec["rules"].strip(),
-                author_id=SEED_AUTHOR_ID,
-                author_email=SEED_AUTHOR_EMAIL,
-                is_published=True,
-                installs=spec.get("installs", 0),
-                upvotes=spec.get("upvotes", 0),
+
+        for data in PLUGINS:
+            _, was_created = Plugin.objects.get_or_create(
+                name=data["name"],
+                author_id=DUMMY_AUTHOR_ID,
+                defaults={
+                    "description":  data["description"],
+                    "plugin_type":  data["plugin_type"],
+                    "rules":        data["rules"],
+                    "author_email": DUMMY_AUTHOR_EMAIL,
+                    "is_published": True,
+                    "installs":     data["installs"],
+                    "upvotes":      data["upvotes"],
+                },
             )
-            created += 1
+            if was_created:
+                created += 1
+                self.stdout.write(f"  ✓ Created: {data['name']}")
+            else:
+                skipped += 1
+                self.stdout.write(f"  – Skipped (already exists): {data['name']}")
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"seed_marketplace: {created} plugin(s) created, {skipped} already existed."
+                f"\nDone. {created} plugin(s) created, {skipped} skipped."
             )
         )
