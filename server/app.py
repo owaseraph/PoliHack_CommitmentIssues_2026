@@ -1,112 +1,102 @@
 from flask import Flask, request, jsonify
-from services.link_analyzer import analyze_links, unknown_link
+from services.link_analyzer import analyze_links
 from services.llm_service import analyze_text
-from services.scoring import compute_trust_score, get_free_description
+from services.scoring import get_description, compute_trust_score
+from models.db import init_db
 import time
 
 app = Flask(__name__)
 
-# Store the time of the last LLM call and the last LLM description for caching
-last_llm_timestamp = 0
-llm_cooldown = 5  # Time in seconds for LLM cooldown
-last_llm_description = ""  # Cache the LLM description
-last_llm_trust_score = 100  # Default trust score if LLM is triggered
+VERDICT_URL = "https://polihackcommitmentissues2026-production.up.railway.app/"
+
+_last_llm_time   = 0
+_last_llm_desc   = ""
+_last_llm_score  = 50
+_last_llm_threat = "none"
+LLM_COOLDOWN     = 5
+
+
+def build_response(trust_score, description, threat_type="none"):
+    return {
+        "trust_score": trust_score,
+        "description": description,
+        "threat_type": threat_type,
+        "verdict_url": VERDICT_URL,
+    }
+
+
+def run_llm(text, links, force=False):
+    global _last_llm_time, _last_llm_desc, _last_llm_score, _last_llm_threat
+    now = time.time()
+    if force or now - _last_llm_time >= LLM_COOLDOWN:
+        print("[LLM] Calling Gemini…")
+        desc, score, threat = analyze_text(text, links)
+        _last_llm_time   = now
+        _last_llm_desc   = desc
+        _last_llm_score  = score
+        _last_llm_threat = threat
+    else:
+        print("[LLM] Cooldown — returning cached")
+        desc, score, threat = _last_llm_desc, _last_llm_score, _last_llm_threat
+    return desc, score, threat
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify({"status": "ok"})
+
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
-    global last_llm_timestamp, last_llm_description, last_llm_trust_score
+    data    = request.json or {}
+    user_id = data.get("user_id", "free_user")
+    text    = data.get("data", "")
+    links   = data.get("links", [])
 
-    data = request.json
-    user_id = data.get("user_id")
-    text = data.get("data", "")
-    links = data.get("links", [])
+    print(f"\n[REQUEST] user={user_id}  links={len(links)}")
+    worst_score, cleaned_links, worst_link, all_known = analyze_links(links)
 
-    # Analyze links first
-    link_score, cleaned_links, worst_link = analyze_links(links)
-
-    print(f"unknown_link: {unknown_link}")  # Debugging print
-
-    # 🔥 FREE TIER (SMART LOGIC)
+    # Free tier — DB only, no LLM ever
     if user_id != "premium_user":
-        trust_score = compute_trust_score(link_score)
+        score = compute_trust_score(worst_score)
+        desc  = get_description(worst_link, worst_score)
+        print(f"[FREE] score={score}  worst={worst_link}")
+        return jsonify(build_response(score, desc))
 
-        description = get_free_description(
-            worst_link=worst_link,
-            worst_score=link_score
-        )
+    # Premium: all links in DB → return DB score immediately
+    if cleaned_links and all_known:
+        score = compute_trust_score(worst_score)
+        desc  = get_description(worst_link, worst_score)
+        print(f"[PREMIUM/DB] score={score}  worst={worst_link}")
+        return jsonify(build_response(score, desc))
 
-        response = {
-            "trust_score": trust_score,
-            "description": description,
-            "verdict_url": "https://polihackcommitmentissues2026-production.up.railway.app/"
-        }
+    # Premium: at least one unknown link, or no links at all → LLM
+    print("[PREMIUM/LLM] Triggering Gemini…")
+    desc, score, threat = run_llm(text, cleaned_links)
+    print(f"[PREMIUM/LLM] score={score}  threat={threat}")
+    return jsonify(build_response(score, desc, threat))
 
-        print("[FREE] score:", trust_score)
-        print("[FREE] worst link:", worst_link)
 
-        return jsonify(response)
+@app.route("/ask", methods=["POST"])
+def ask():
+    """
+    Premium-only. Called when user clicks 'Ask AI' in the extension panel.
+    Always forces a fresh LLM call — bypasses cooldown and DB cache.
+    """
+    data    = request.json or {}
+    user_id = data.get("user_id", "free_user")
+    text    = data.get("data", "")
+    links   = data.get("links", [])
 
-    # 🔥 PREMIUM TIER (Optimized LLM Calls)
-    # If links are detected and no unknown links, skip LLM analysis
-    if cleaned_links and not unknown_link:
-        print("[PREMIUM] Links detected, skipping LLM analysis.")
-        trust_score = compute_trust_score(link_score)
-        description = get_free_description(
-            worst_link=worst_link,
-            worst_score=link_score
-        )
+    if user_id != "premium_user":
+        return jsonify({"error": "premium only", "description": None, "trust_score": None}), 403
 
-        response = {
-            "trust_score": trust_score,
-            "description": description,
-            "verdict_url": "https://polihackcommitmentissues2026-production.up.railway.app/"
-        }
-
-        print("[PREMIUM] score:", trust_score)
-        print("[PREMIUM] worst link:", worst_link)
-
-        return jsonify(response)
-
-    # 🔥 If the link score is unknown (defaults to 60) or no links, use LLM analysis
-    if unknown_link or not cleaned_links:
-        print("[PREMIUM] Unknown link detected or no links found, triggering LLM analysis.")
-
-        # LLM cooldown logic
-        current_time = time.time()
-        if current_time - last_llm_timestamp >= llm_cooldown:
-            print("[PREMIUM] Using LLM analysis.")
-            llm_description, llm_trust_score = analyze_text(text)
-
-            # Update the last LLM timestamp and store the description and trust score
-            last_llm_timestamp = current_time
-            last_llm_description = llm_description
-            last_llm_trust_score = llm_trust_score
-
-            response = {
-                "trust_score": llm_trust_score,
-                "description": llm_description,
-                "verdict_url": "https://polihackcommitmentissues2026-production.up.railway.app/"
-            }
-
-            print("[PREMIUM] LLM score:", llm_trust_score)
-            print("[PREMIUM] LLM description:", llm_description)
-        else:
-            # If LLM is not needed, use cached description
-            print("[PREMIUM] LLM not needed, using cached description.")
-            response = {
-                "trust_score": last_llm_trust_score,
-                "description": last_llm_description or get_free_description(
-                    worst_link=worst_link,
-                    worst_score=link_score
-                ),
-                "verdict_url": "https://polihackcommitmentissues2026-production.up.railway.app/"
-            }
-
-            print("[PREMIUM] Using cached LLM description:", last_llm_description)
-            print("[PREMIUM] Cached LLM score:", last_llm_trust_score)
-
-    return jsonify(response)
+    print(f"\n[ASK_AI] Forced Gemini for user={user_id}  links={len(links)}")
+    _, cleaned_links, _, _ = analyze_links(links)
+    desc, score, threat = run_llm(text, cleaned_links, force=True)
+    return jsonify(build_response(score, desc, threat))
 
 
 if __name__ == "__main__":
+    init_db()
     app.run(debug=True)
