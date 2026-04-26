@@ -46,6 +46,10 @@ LINKS = [
     ("https://bbc.com",             94),
     ("https://nytimes.com",         91),
     ("https://reuters.com",         93),
+    # Google OAuth — legitimate auth flows, must never be flagged
+    ("https://accounts.google.com",   99),
+    ("https://oauth2.googleapis.com", 99),
+    ("https://apis.google.com",       99),
     # ── Suspicious / low-quality (35-55) ─────────────────────────────────────
     ("https://bit.ly",              45),
     ("https://tinyurl.com",         45),

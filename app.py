@@ -38,6 +38,22 @@ def run_llm(text, links, force=False):
     return _last_llm_desc, _last_llm_score, _last_llm_threat, "llm-cached"
 
 
+
+def merge_scores(db_score, llm_score, llm_desc, llm_threat, worst_link, worst_score):
+    # If either source is alarmed (<70): take minimum — something is wrong.
+    # If both are calm (>=70): take maximum — DB unknown default (70) should not
+    # drag down a site the LLM correctly identifies as safe (e.g. proton.me).
+    if db_score < 70 or llm_score < 70:
+        final_score = min(db_score, llm_score)
+    else:
+        final_score = max(db_score, llm_score)
+
+    # Description comes from whichever source is more alarmed
+    if llm_score <= db_score:
+        return final_score, llm_desc, llm_threat
+    return final_score, get_description(worst_link, worst_score), "none"
+
+
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"})
@@ -66,15 +82,7 @@ def analyze():
     # Final score = min(db_score, llm_score) so either can flag the page.
     print("[PREMIUM/LLM] Triggering Gemini…")
     llm_desc, llm_score, llm_threat, source = run_llm(text, cleaned_links)
-    final_score = min(db_score, llm_score)
-
-    # Use LLM description if LLM is more alarmed, otherwise use DB description
-    if llm_score <= db_score:
-        desc   = llm_desc
-        threat = llm_threat
-    else:
-        desc   = get_description(worst_link, worst_score)
-        threat = "none"
+    final_score, desc, threat = merge_scores(db_score, llm_score, llm_desc, llm_threat, worst_link, worst_score)
 
     print(f"[PREMIUM] db={db_score}  llm={llm_score}  final={final_score}  threat={threat}")
     return jsonify(build_response(final_score, desc, threat, source=source, worst_link=worst_link))
@@ -96,14 +104,9 @@ def ask():
     db_score = compute_trust_score(worst_score)
 
     llm_desc, llm_score, llm_threat, _ = run_llm(text, cleaned_links, force=True)
-    final_score = min(db_score, llm_score)
+    final_score, desc, threat = merge_scores(db_score, llm_score, llm_desc, llm_threat, worst_link, worst_score)
 
-    if llm_score <= db_score:
-        desc, threat = llm_desc, llm_threat
-    else:
-        desc, threat = get_description(worst_link, worst_score), "none"
-
-    return jsonify(build_response(final_score, desc, llm_threat, source="llm", worst_link=worst_link))
+    return jsonify(build_response(final_score, desc, threat, source="llm", worst_link=worst_link))
 
 
 if __name__ == "__main__":
