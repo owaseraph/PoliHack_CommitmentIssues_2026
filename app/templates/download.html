@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}PhishGuard — Download Extension{% endblock %}
 {% block nav_download %}active{% endblock %}
 
@@ -156,7 +157,7 @@
         <span class="ext-badge">Chromium</span>
         <span class="ext-badge">MV3</span>
       </div>
-      <a href="#" class="ext-btn eb-chrome">DOWNLOAD FOR CHROME</a>
+      <a href="{% static 'extension/phishguard-extension.zip' %}" download class="ext-btn eb-chrome" onclick="showInstallSteps()">DOWNLOAD FOR CHROME</a>
     </div>
 
     <div class="ext-card">
