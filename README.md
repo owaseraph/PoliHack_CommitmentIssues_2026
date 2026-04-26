@@ -2,7 +2,7 @@
 
 **Real-time phishing protection for Gmail with AI-powered detection and community intelligence.**
 
-Built for PoliHack 2026 — _Defending trust across digital communities._
+Built for PoliHack 2026 — _Detecting and Preventing Phishing Attacks in Real Time._
 
 ---
 
@@ -379,7 +379,7 @@ Questions? Feedback? Want to collaborate?
 
 **Live Demo**: https://polihackcommitmentissues2026-production.up.railway.app/  
 **GitHub**: https://github.com/owaseraph/PoliHack_CommitmentIssues_2026  
-**Email**: [your-email]
+**Email**: [tcaciuc.rares.stefan@gmail.com]
 
 ---
 
