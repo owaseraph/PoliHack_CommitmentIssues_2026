@@ -14,7 +14,7 @@ _last_llm_desc   = ""
 _last_llm_score  = 50
 _last_llm_threat = "none"
 _last_llm_url    = ""   # bust cache when URL changes (new tab / navigation)
-LLM_COOLDOWN     = 30
+LLM_COOLDOWN     = 10
 
 
 def build_response(trust_score, description, threat_type="none", source="db", worst_link=None):
