@@ -367,9 +367,9 @@ MIT License — see [LICENSE](LICENSE) for details.
 ## 👥 Team
 
 **Commitment Issues**  
-- [Petric Rares] — [Role]  
-- [Tarnita Robert] — [Role]  
-- [Tcaciuc Rares] — [Role]  
+- [Petric Rares] — [WebExtension Developer, Gmail API]  
+- [Tarnita Robert] — [Frontend Developer, Database Manager]  
+- [Tcaciuc Rares] — [Backend Developer, Detection Algorithm Developer]  
 
 ---
 
