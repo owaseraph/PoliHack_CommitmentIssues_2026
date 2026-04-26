@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NorthBridge Bank — Secure Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f8fc;
+  --surface: #ffffff;
+  --border: #e8eaf0;
+  --text: #111827;
+  --muted: #6b7280;
+  --accent: #1d4ed8;
+  --accent-light: #eff6ff;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── TOP BAR ── */
+.topbar {
+  background: var(--accent);
+  color: #fff;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  height: 58px;
+  gap: 20px;
+}
+.topbar-logo { font-size: 17px; font-weight: 600; letter-spacing: -.3px; display: flex; align-items: center; gap: 9px; }
+.topbar-logo svg { opacity: .9; }
+.topbar-nav { display: flex; gap: 4px; margin-left: 28px; }
+.topbar-nav a { color: rgba(255,255,255,.75); font-size: 13px; font-weight: 500; text-decoration: none; padding: 6px 12px; border-radius: 6px; transition: .15s; }
+.topbar-nav a:hover, .topbar-nav a.active { background: rgba(255,255,255,.12); color: #fff; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.topbar-right .user { font-size: 13px; opacity: .8; }
+.topbar-right .avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+
+/* ── ALERT BANNER ── */
+.alert-banner {
+  background: #fef2f2; border-bottom: 1px solid #fecaca;
+  padding: 10px 32px; display: none; align-items: center; gap: 10px;
+  font-size: 13px; color: #991b1b;
+}
+.alert-banner.show { display: flex; }
+.alert-banner strong { font-weight: 600; }
+.alert-banner a { color: #dc2626; font-weight: 600; }
+
+/* ── LAYOUT ── */
+.layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 58px); }
+
+/* ── SIDEBAR ── */
+.sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 20px 0; }
+.sidebar-section { padding: 0 12px 16px; }
+.sidebar-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding: 0 8px; margin-bottom: 6px; }
+.sidebar-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+  border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--muted);
+  cursor: pointer; transition: .15s; text-decoration: none;
+}
+.sidebar-item:hover { background: var(--bg); color: var(--text); }
+.sidebar-item.active { background: var(--accent-light); color: var(--accent); }
+.sidebar-item svg { flex-shrink: 0; }
+.sidebar-divider { height: 1px; background: var(--border); margin: 8px 12px; }
+
+/* ── MAIN ── */
+.main { padding: 28px 32px; max-width: 900px; }
+.page-title { font-size: 22px; font-weight: 600; letter-spacing: -.4px; margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+/* ── ACCOUNT CARDS ── */
+.accounts-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 28px; }
+.acct-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+.acct-card .label { font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+.acct-card .amount { font-size: 24px; font-weight: 600; letter-spacing: -.5px; margin-bottom: 4px; }
+.acct-card .sub { font-size: 11px; color: var(--muted); }
+.acct-card.highlight { background: var(--accent); border-color: var(--accent); }
+.acct-card.highlight .label, .acct-card.highlight .sub { color: rgba(255,255,255,.7); }
+.acct-card.highlight .amount { color: #fff; }
+
+/* ── SECTION HEADER ── */
+.section-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.section-hdr h2 { font-size: 15px; font-weight: 600; }
+.section-hdr a { font-size: 12px; color: var(--accent); text-decoration: none; font-weight: 500; }
+
+/* ── TRANSACTIONS ── */
+.txn-list { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 28px; }
+.txn-row { display: flex; align-items: center; gap: 13px; padding: 13px 18px; border-bottom: 1px solid var(--border); }
+.txn-row:last-child { border-bottom: none; }
+.txn-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
+.txn-info { flex: 1; min-width: 0; }
+.txn-name { font-size: 13px; font-weight: 500; }
+.txn-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.txn-amount { font-size: 14px; font-weight: 600; }
+.txn-amount.debit { color: var(--danger); }
+.txn-amount.credit { color: var(--success); }
+
+/* ── MESSAGES (the injection zone) ── */
+.messages-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 28px; }
+.msg-row { padding: 14px 18px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; }
+.msg-row:last-child { border-bottom: none; }
+.msg-row:hover { background: var(--bg); }
+.msg-row.unread .msg-subject { font-weight: 600; }
+.msg-from { font-size: 12px; color: var(--muted); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+.msg-from .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.msg-subject { font-size: 13px; color: var(--text); }
+.msg-preview { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── EXPANDED MESSAGE ── */
+#msg-expanded { display: none; margin: 0 18px 14px; padding: 14px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); font-size: 13px; line-height: 1.7; }
+#msg-expanded.show { display: block; }
+#msg-expanded .msg-meta { font-size: 11px; color: var(--muted); margin-bottom: 10px; font-family: var(--mono); }
+#msg-expanded a { color: var(--accent); }
+#msg-expanded a.suspicious { color: var(--danger); background: #fef2f2; padding: 1px 5px; border-radius: 3px; font-family: var(--mono); font-size: 11px; }
+#msg-expanded a.safe { color: var(--success); background: #f0fdf4; padding: 1px 5px; border-radius: 3px; font-family: var(--mono); font-size: 11px; }
+
+/* ── TEST CONTROLS ── */
+.test-controls {
+  background: #0f172a; border-radius: 12px; padding: 20px; margin-bottom: 28px;
+}
+.test-controls h3 { font-size: 13px; font-weight: 600; color: #e2e8f0; margin-bottom: 4px; }
+.test-controls p { font-size: 11px; color: #64748b; margin-bottom: 14px; font-family: var(--mono); }
+.test-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.test-btn {
+  font-family: var(--mono); font-size: 11px; padding: 7px 14px;
+  border-radius: 7px; border: 1px solid #1e293b; background: #1e293b;
+  color: #94a3b8; cursor: pointer; transition: all .15s;
+}
+.test-btn:hover { background: #293548; border-color: #334155; color: #e2e8f0; }
+.test-btn.active { border-color: #6366f1; color: #818cf8; background: rgba(99,102,241,.1); }
+.test-btn.safe   { border-color: #166534; color: #4ade80; background: rgba(34,197,94,.08); }
+.test-btn.danger { border-color: #991b1b; color: #f87171; background: rgba(239,68,68,.08); }
+.test-btn.llm    { border-color: #5b21b6; color: #a78bfa; background: rgba(139,92,246,.08); }
+
+/* ── QUICK LINKS (right column placeholder) ── */
+.quicklinks { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+.quicklinks h3 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+.ql-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; text-decoration: none; color: var(--text); }
+.ql-item:last-child { border-bottom: none; }
+.ql-item:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <rect width="22" height="22" rx="5" fill="rgba(255,255,255,0.15)"/>
+      <path d="M11 4L4 7.5v5.5c0 4 3 7 7 8 4-1 7-4 7-8V7.5L11 4z" fill="white" opacity=".9"/>
+    </svg>
+    NorthBridge Bank
+  </div>
+  <nav class="topbar-nav">
+    <a href="#" class="active">Dashboard</a>
+    <a href="#">Transfers</a>
+    <a href="#">Payments</a>
+    <a href="#">Statements</a>
+  </nav>
+  <div class="topbar-right">
+    <span class="user">James Whitfield</span>
+    <div class="avatar">JW</div>
+  </div>
+</div>
+
+<!-- ALERT BANNER — shown when danger scenario loaded -->
+<div class="alert-banner" id="alert-banner">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L1 14h14L8 1z" stroke="#dc2626" stroke-width="1.5" fill="none"/><line x1="8" y1="6" x2="8" y2="10" stroke="#dc2626" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="12" r=".8" fill="#dc2626"/></svg>
+  <span><strong>Security Notice:</strong> TrustGuard has detected a suspicious message in your inbox. <a href="#">Review now</a></span>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Accounts</div>
+      <a class="sidebar-item active" href="#">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="3" width="13" height="9" rx="2" stroke="currentColor" stroke-width="1.3"/><line x1="1" y1="6.5" x2="14" y2="6.5" stroke="currentColor" stroke-width="1.3"/></svg>
+        Overview
+      </a>
+      <a class="sidebar-item" href="#">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M7.5 4v4l2.5 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        History
+      </a>
+      <a class="sidebar-item" href="#">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 7.5h11M7.5 2v11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Transfer
+      </a>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Security</div>
+      <a class="sidebar-item" href="#">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1L2 3.8v4.5c0 3.5 2.5 6.2 5.5 6.7 3-.5 5.5-3.2 5.5-6.7V3.8L7.5 1z" stroke="currentColor" stroke-width="1.3"/></svg>
+        TrustGuard
+      </a>
+      <a class="sidebar-item" href="#">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="3" y="6" width="9" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5 6V4.5a2.5 2.5 0 015 0V6" stroke="currentColor" stroke-width="1.3"/></svg>
+        Settings
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <div class="page-title">Good morning, James</div>
+    <div class="page-sub">Here's your account summary for today, April 25 2026</div>
+
+    <!-- ACCOUNTS -->
+    <div class="accounts-grid">
+      <div class="acct-card highlight">
+        <div class="label">Checking Account</div>
+        <div class="amount">$12,480.55</div>
+        <div class="sub">**** 4821 · Available</div>
+      </div>
+      <div class="acct-card">
+        <div class="label">Savings Account</div>
+        <div class="amount">$38,220.00</div>
+        <div class="sub">**** 9103 · 4.2% APY</div>
+      </div>
+      <div class="acct-card">
+        <div class="label">Credit Card</div>
+        <div class="amount">$1,240.80</div>
+        <div class="sub">**** 7762 · Due May 15</div>
+      </div>
+    </div>
+
+    <!-- RECENT TRANSACTIONS -->
+    <div class="section-hdr">
+      <h2>Recent Transactions</h2>
+      <a href="https://bankofamerica.com">View all</a>
+    </div>
+    <div class="txn-list">
+      <div class="txn-row">
+        <div class="txn-icon" style="background:#eff6ff">🛒</div>
+        <div class="txn-info"><div class="txn-name">Amazon Purchase</div><div class="txn-date">Apr 24, 2026</div></div>
+        <div class="txn-amount debit">-$89.99</div>
+      </div>
+      <div class="txn-row">
+        <div class="txn-icon" style="background:#f0fdf4">💰</div>
+        <div class="txn-info"><div class="txn-name">Direct Deposit — Employer</div><div class="txn-date">Apr 23, 2026</div></div>
+        <div class="txn-amount credit">+$3,250.00</div>
+      </div>
+      <div class="txn-row">
+        <div class="txn-icon" style="background:#fef9c3">🎵</div>
+        <div class="txn-info"><div class="txn-name">Spotify Premium</div><div class="txn-date">Apr 22, 2026</div></div>
+        <div class="txn-amount debit">-$11.99</div>
+      </div>
+      <div class="txn-row">
+        <div class="txn-icon" style="background:#fdf2f8">🍕</div>
+        <div class="txn-info"><div class="txn-name">Uber Eats</div><div class="txn-date">Apr 21, 2026</div></div>
+        <div class="txn-amount debit">-$34.40</div>
+      </div>
+    </div>
+
+    <!-- TEST CONTROLS -->
+    <div class="test-controls">
+      <h3>TrustGuard Test Panel</h3>
+      <p>// injects real links into the message inbox below — extension detects the DOM change and scans</p>
+      <div class="test-btns">
+        <button class="test-btn safe"   onclick="loadMsg('safe')">Safe message</button>
+        <button class="test-btn danger" onclick="loadMsg('phishing')">Phishing (DB hit)</button>
+        <button class="test-btn llm"   onclick="loadMsg('llm')">Unknown links → LLM</button>
+        <button class="test-btn"       onclick="clearMsg()">Clear</button>
+      </div>
+    </div>
+
+    <!-- SECURE MESSAGES -->
+    <div class="section-hdr">
+      <h2>Secure Messages</h2>
+      <a href="#">Mark all read</a>
+    </div>
+
+    <div class="messages-card">
+      <!-- static message (always present, safe) -->
+      <div class="msg-row" onclick="toggleExpanded('static')">
+        <div class="msg-from"><span class="dot"></span> NorthBridge Bank · service@northbridgebank.com</div>
+        <div class="msg-subject">Your April statement is ready</div>
+        <div class="msg-preview">Your account statement for April 2026 is now available. Log in at northbridgebank.com to view.</div>
+      </div>
+
+      <!-- INJECTION ZONE — starts empty -->
+      <div id="inject-zone"></div>
+
+      <!-- expanded content lives here -->
+      <div id="msg-expanded">
+        <div class="msg-meta" id="msg-meta"></div>
+        <div id="msg-body"></div>
+      </div>
+
+      <div class="msg-row">
+        <div class="msg-from">NorthBridge Support · support@northbridgebank.com</div>
+        <div class="msg-subject">Two-factor authentication enabled</div>
+        <div class="msg-preview">2FA has been successfully enabled on your account. If this wasn't you, contact us immediately.</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const MSGS = {
+  safe: {
+    header: {
+      from: "NorthBridge Bank · service@northbridgebank.com",
+      subject: "Your mortgage payment is confirmed",
+      preview: "Your scheduled mortgage payment of $1,842.00 has been processed successfully."
+    },
+    meta: "From: service@northbridgebank.com  ·  To: james.whitfield@email.com  ·  Apr 25, 2026",
+    body: `
+      Dear James,<br><br>
+      Your scheduled mortgage payment of <strong>$1,842.00</strong> has been successfully processed on April 25, 2026.<br><br>
+      Transaction reference: <strong>#NBK-2026-0425-8821</strong><br><br>
+      Manage your mortgage at any time:<br>
+      <a href="https://bankofamerica.com/mortgage" class="safe">https://bankofamerica.com/mortgage</a><br><br>
+      View your full payment history:<br>
+      <a href="https://chase.com/history" class="safe">https://chase.com/history</a><br><br>
+      Questions? Contact us at <a href="mailto:support@northbridgebank.com" class="safe">support@northbridgebank.com</a><br><br>
+      — NorthBridge Bank
+    `
+  },
+
+  phishing: {
+    header: {
+      from: "⚠ PayPal Security · security@paypal-secure-login.xyz",
+      subject: "⚠ URGENT: Your account has been suspended",
+      preview: "Unusual activity detected. Your PayPal account access has been temporarily limited..."
+    },
+    meta: "From: security@paypal-secure-login.xyz  ·  To: james.whitfield@email.com  ·  Apr 25, 2026",
+    body: `
+      Dear Customer,<br><br>
+      We have detected <strong>unusual activity</strong> on your PayPal account. Your account access has been temporarily limited until you verify your identity.<br><br>
+      To restore access immediately, click the link below:<br>
+      <a href="https://login-paypal-secure.xyz/verify?token=xk38f291" class="suspicious">https://login-paypal-secure.xyz/verify?token=xk38f291</a><br><br>
+      You have also been selected to claim a reward for being a loyal customer:<br>
+      <a href="https://free-iphone-winner.biz/claim?ref=paypal2026" class="suspicious">https://free-iphone-winner.biz/claim?ref=paypal2026</a><br><br>
+      Failure to verify within <strong>24 hours</strong> will result in permanent suspension of your account and funds.<br><br>
+      Reply to: <a href="mailto:security@paypal-secure-login.xyz" class="suspicious">security@paypal-secure-login.xyz</a><br><br>
+      — PayPal Security Team
+    `
+  },
+
+  llm: {
+    header: {
+      from: "IRS Tax Division · refunds@irs-gov-portal.net",
+      subject: "Tax Refund of $3,240.00 Pending — Action Required",
+      preview: "Our records show you are eligible for a 2025 tax refund. You must claim within 48 hours..."
+    },
+    meta: "From: refunds@irs-gov-portal.net  ·  To: james.whitfield@email.com  ·  Apr 25, 2026",
+    body: `
+      Dear Taxpayer,<br><br>
+      Our records indicate you are eligible for a tax refund of <strong>$3,240.00</strong> for the 2025 fiscal year.<br><br>
+      To process your refund, you must verify your identity and provide banking details through our secure portal. You must act within <strong>48 hours</strong> or your refund will be permanently forfeited.<br><br>
+      Submit your claim here:<br>
+      <a href="https://irs-gov-portal.net/claim?ref=2025refund&ssn=verify" class="suspicious">https://irs-gov-portal.net/claim?ref=2025refund</a><br><br>
+      Confirm your banking information:<br>
+      <a href="https://secure-refund-verify.co/irs/banking" class="suspicious">https://secure-refund-verify.co/irs/banking</a><br><br>
+      Additional verification:<br>
+      <a href="https://tax-return-2026.info/submit/ssn" class="suspicious">https://tax-return-2026.info/submit/ssn</a><br><br>
+      Refund support: <a href="mailto:refunds@irs-gov-portal.net" class="suspicious">refunds@irs-gov-portal.net</a><br><br>
+      — Internal Revenue Service (Automated Processing Division)
+    `
+  }
+};
+
+let activeMsg = null;
+
+function loadMsg(key) {
+  const m = MSGS[key];
+  const zone = document.getElementById("inject-zone");
+  const expanded = document.getElementById("msg-expanded");
+  const alert = document.getElementById("alert-banner");
+
+  // Clear first so mutation fires twice (clear + inject = signature change)
+  zone.innerHTML = "";
+  expanded.classList.remove("show");
+  expanded.style.borderTop = "";
+
+  requestAnimationFrame(() => {
+    zone.innerHTML = `
+      <div class="msg-row unread" onclick="openExpanded('${key}')">
+        <div class="msg-from"><span class="dot" style="background:${key==="safe"?"#16a34a":"#dc2626"}"></span> ${m.header.from}</div>
+        <div class="msg-subject">${m.header.subject}</div>
+        <div class="msg-preview">${m.header.preview}</div>
+      </div>`;
+
+    // Show alert banner for threats
+    alert.classList.toggle("show", key !== "safe");
+
+    // Mark button active
+    document.querySelectorAll(".test-btn").forEach(b => b.classList.remove("active"));
+    const btn = document.querySelector(`.test-btn.${key === "safe" ? "safe" : key === "phishing" ? "danger" : "llm"}`);
+    if (btn) btn.classList.add("active");
+
+    activeMsg = key;
+  });
+}
+
+function openExpanded(key) {
+  const m = MSGS[key];
+  const expanded = document.getElementById("msg-expanded");
+  document.getElementById("msg-meta").textContent = m.meta;
+  document.getElementById("msg-body").innerHTML = m.body;
+  expanded.classList.add("show");
+  expanded.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function clearMsg() {
+  document.getElementById("inject-zone").innerHTML = "";
+  document.getElementById("msg-expanded").classList.remove("show");
+  document.getElementById("alert-banner").classList.remove("show");
+  document.querySelectorAll(".test-btn").forEach(b => b.classList.remove("active"));
+  activeMsg = null;
+}
+</script>
+
+</body>
+</html>
